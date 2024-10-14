@@ -934,5 +934,4 @@ df_unificado = unificar_estadisticas(fight_stats_winsorized)
 # Calcular las estadísticas de los últimos 5 combates por peleador
 df_estadisticas_ultimos_5 = calcular_ultimos_5_combates(df_unificado)
 
-stacking_winner = joblib.load('models/stacking_winner.pkl')
-stacking_method = joblib.load('models/stacking_method.pkl')
+
