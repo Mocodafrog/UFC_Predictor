@@ -456,7 +456,7 @@ category_normalization = {
     'UFC Bantamweight Title Bout': 'Bantamweight',
     'UFC Featherweight Title Bout': 'Featherweight',
     'UFC Flyweight Title Bout': 'Flyweight',
-    'UFC Heavyweight Title Bout': 'Heavyweight Title',
+    'UFC Heavyweight Title Bout': 'Heavyweight',
     'UFC Light Heavyweight Title Bout': 'Light Heavyweight',
     'UFC Lightweight Title Bout': 'Lightweight',
     'UFC Middleweight Title Bout': 'Middleweight',
