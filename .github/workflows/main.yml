@@ -27,6 +27,3 @@ jobs:
       run: |
         python UFC_Pipeline.py
 
-    - name: Run Streamlit app (if needed)
-      run: |
-        streamlit run app.py
