@@ -940,6 +940,8 @@ df_unificado = unificar_estadisticas(fight_stats_winsorized)
 df_estadisticas_ultimos_5 = calcular_ultimos_5_combates(df_unificado)
 
 
+columnas_X = X.columns  # Aquí usas las columnas de tu DataFrame de características X
+columnas_X.to_csv('data/columnas_X.csv', index=False)
 
 # Guardar el modelo de ganador
 joblib.dump(stacking_winner, 'models/stacking_winner.pkl')
