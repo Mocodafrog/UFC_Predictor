@@ -1,16 +1,19 @@
 import streamlit as st
+import joblib
+import pandas as pd
 
-from UFC_Pipeline import obtener_datos_peleas  # Esta es una función que genera los datos de peleadores, por ejemplo.
+# Cargar los modelos entrenados
+stacking_winner = joblib.load('models/stacking_winner.pkl')
+stacking_method = joblib.load('models/stacking_method.pkl')
 
-# Generar o cargar los datos dentro de la aplicación
-@st.cache_data
-def cargar_datos():
-    # Llama al pipeline para obtener los datos
-    df_estadisticas_ultimos_5 = obtener_datos_peleas()  # Asegúrate de que esta función existe y devuelve el DataFrame
-    return df_estadisticas_ultimos_5
+# Cargar los datos preprocesados
+df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
 
-# Aquí asumo que df_estadisticas_ultimos_5 ya existe y se genera directamente en tu pipeline
+# Asegurarse de que las columnas del modelo se carguen correctamente
+X = pd.read_csv('data/X_columns.csv')  # Aquí deberías tener las columnas de entrenamiento
+columnas_X = X.columns
 
+# Crear DataFrame para la pelea futura basado en los datos de los últimos 5 combates
 def crear_dataframe_pelea(fighter_1, fighter_2, df_estadisticas_ultimos_5):
     # Obtener las estadísticas de los dos peleadores
     stats_fighter_1 = df_estadisticas_ultimos_5[df_estadisticas_ultimos_5['fighter'] == fighter_1]
@@ -28,9 +31,9 @@ def crear_dataframe_pelea(fighter_1, fighter_2, df_estadisticas_ultimos_5):
     stats_fighter_2.columns = [col + '_figther_2' for col in stats_fighter_2.columns]
 
     # Unir las estadísticas de ambos peleadores en un solo DataFrame
-    pelea_df = pd.concat([stats_fighter_1.reset_index(drop=True), stats_fighter_2.reset_index(drop=True)], axis=1)
+    df_pelea_futura = pd.concat([stats_fighter_1.reset_index(drop=True), stats_fighter_2.reset_index(drop=True)], axis=1)
 
-    return pelea_df
+    return df_pelea_futura
 
 # Título de la app
 st.title('Predicción de Resultados de Peleas de UFC')
@@ -48,8 +51,8 @@ format_input = format_mapping[format_selection]
 
 # Selección de clase de peso (se convierte a valor numérico según tu tabla)
 weight_class_mapping = {
-    'Bantamweight': 0, 'Catchweight': 1, 'Featherweight': 2, 'Flyweight': 3, 'Heavyweight': 4, 'Heavyweight Title': 5,
-    'Light Heavyweight': 6, 'Lightweight': 7, 'Middleweight': 9, 'Welterweight': 11, 'Women\'s Bantamweight': 12,
+    'Bantamweight': 0, 'Catchweight': 1, 'Featherweight': 2, 'Flyweight': 3, 'Heavyweight': 4,
+    'Light Heavyweight': 5, 'Lightweight': 6, 'Middleweight': 9, 'Welterweight': 11, 'Women\'s Bantamweight': 12,
     'Women\'s Featherweight': 13, 'Women\'s Flyweight': 14, 'Women\'s Strawweight': 15
 }
 weight_class_selection = st.selectbox('Selecciona la clase de peso:', list(weight_class_mapping.keys()))
@@ -83,18 +86,27 @@ if df_pelea_futura is not None:
     df_pelea_futura['form_last_5_figther_2'] = form_last_5_fighter_2
     df_pelea_futura['Weight Class'] = weight_class_input
 
-    # Mostrar las estadísticas generadas
-    st.write("--- Estadísticas generadas para la predicción ---")
-    st.write(df_pelea_futura)
+    # Asegurarse de que el DataFrame tenga las mismas columnas en el mismo orden que el modelo espera
+    columnas_faltantes = set(columnas_X) - set(df_pelea_futura.columns)
+    columnas_adicionales = set(df_pelea_futura.columns) - set(columnas_X)
 
-    # Botón para hacer la predicción
-    if st.button('Hacer Predicción'):
-        # Aquí debes llamar a la función que hace la predicción
-        hacer_prediccion_winner(stacking_winner, df_pelea_futura)
-        hacer_prediccion_method(stacking_method, df_pelea_futura)
+    if columnas_faltantes:
+        st.error(f"Error: Faltan las siguientes columnas en el DataFrame: {columnas_faltantes}")
+    elif columnas_adicionales:
+        st.warning(f"Advertencia: Hay columnas adicionales en el DataFrame que no se esperaban: {columnas_adicionales}")
+    else:
+        # Asegurarse de que las columnas estén en el orden correcto
+        df_pelea_futura = df_pelea_futura[columnas_X]
+
+
+
+        # Botón para hacer la predicción
+        if st.button('Hacer Predicción'):
+            hacer_prediccion_winner(stacking_winner, df_pelea_futura, fighter_1, fighter_2)
+            hacer_prediccion_method(stacking_method, df_pelea_futura)
 
 # Función para hacer la predicción del ganador
-def hacer_prediccion_winner(stacking_winner, df_pelea_futura):
+def hacer_prediccion_winner(stacking_winner, df_pelea_futura, fighter_1, fighter_2):
     if df_pelea_futura is not None:
         # Realizar la predicción
         pred_winner = stacking_winner.predict(df_pelea_futura)
@@ -129,4 +141,6 @@ def hacer_prediccion_method(stacking_method, df_pelea_futura):
         st.write(f"{method_mapping[1]}: {method_1_proba:.2f}%")
         st.write(f"{method_mapping[2]}: {method_2_proba:.2f}%")
         st.write(f"Predicción del método: {method_mapping[pred_method[0]]}")
+
+
 
