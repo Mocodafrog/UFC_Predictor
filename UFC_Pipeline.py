@@ -935,3 +935,12 @@ df_unificado = unificar_estadisticas(fight_stats_winsorized)
 df_estadisticas_ultimos_5 = calcular_ultimos_5_combates(df_unificado)
 
 
+
+# Guardar el modelo de ganador
+joblib.dump(stacking_winner, 'models/stacking_winner.pkl')
+
+# Guardar el modelo de método de pelea
+joblib.dump(stacking_method, 'models/stacking_method.pkl')
+
+df_estadisticas_ultimos_5.to_csv('data/df_estadisticas_ultimos_5.csv', index=False)
+
