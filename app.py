@@ -1,5 +1,14 @@
 import streamlit as st
 
+from UFC_Pipeline import obtener_datos_peleas  # Esta es una función que genera los datos de peleadores, por ejemplo.
+
+# Generar o cargar los datos dentro de la aplicación
+@st.cache_data
+def cargar_datos():
+    # Llama al pipeline para obtener los datos
+    df_estadisticas_ultimos_5 = obtener_datos_peleas()  # Asegúrate de que esta función existe y devuelve el DataFrame
+    return df_estadisticas_ultimos_5
+
 # Aquí asumo que df_estadisticas_ultimos_5 ya existe y se genera directamente en tu pipeline
 
 def crear_dataframe_pelea(fighter_1, fighter_2, df_estadisticas_ultimos_5):
