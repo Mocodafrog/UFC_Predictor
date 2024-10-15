@@ -52,8 +52,8 @@ format_input = format_mapping[format_selection]
 # Selección de clase de peso (se convierte a valor numérico según tu tabla)
 weight_class_mapping = {
     'Bantamweight': 0, 'Catchweight': 1, 'Featherweight': 2, 'Flyweight': 3, 'Heavyweight': 4,
-    'Light Heavyweight': 5, 'Lightweight': 6, 'Middleweight': 9, 'Welterweight': 11, 'Women\'s Bantamweight': 12,
-    'Women\'s Featherweight': 13, 'Women\'s Flyweight': 14, 'Women\'s Strawweight': 15
+    'Light Heavyweight': 5, 'Lightweight': 6, 'Middleweight': 7, 'Welterweight': 8, 'Women\'s Bantamweight': 9,
+    'Women\'s Featherweight': 10, 'Women\'s Flyweight': 11, 'Women\'s Strawweight': 12
 }
 weight_class_selection = st.selectbox('Selecciona la clase de peso:', list(weight_class_mapping.keys()))
 weight_class_input = weight_class_mapping[weight_class_selection]
