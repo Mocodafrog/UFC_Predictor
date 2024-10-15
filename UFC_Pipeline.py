@@ -766,6 +766,11 @@ columns_to_drop = ['Control Time_figther_1', 'Control Time_figther_2','Fight_len
 fight_stats = fight_stats.drop(columns=columns_to_drop)
 
 
+with pd.ExcelWriter('category_mappings.xlsx') as writer:
+    for col, mapping_df in category_mappings.items():
+        mapping_df.to_excel(writer, sheet_name=col, index=False)
+        
+
 # Listamos las columnas categóricas (que no queremos escalar)
 categorical_columns = ['Weight Class', 'Method', 'Rounds_figther_2','Rounds_figther_1', 'Format', 'Winner_figther_1', 'Winner_figther_2', 
                        'stance_figther_1', 'stance_figther_2', 'form_last_5_figther_1', 'form_last_5_figther_2']
