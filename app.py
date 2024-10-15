@@ -10,8 +10,7 @@ stacking_method = joblib.load('models/stacking_method.pkl')
 df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
 
 # Asegurarse de que las columnas del modelo se carguen correctamente
-X = pd.read_csv('data/X_columns.csv')  # Aquí deberías tener las columnas de entrenamiento
-X_columns = X.columns
+columnas_X = pd.read_csv('data/columnas_X.csv', header=None).squeeze().tolist()
 
 # Crear DataFrame para la pelea futura basado en los datos de los últimos 5 combates
 def crear_dataframe_pelea(fighter_1, fighter_2, df_estadisticas_ultimos_5):
