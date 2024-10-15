@@ -8,7 +8,7 @@ lightgbm==3.3.5
 beautifulsoup4==4.12.0
 requests>=2.32.0
 matplotlib==3.7.1
-joblib==1.2.0
+joblib==1.4.2
 selenium==4.10.0
 webdriver-manager==3.8.6
 scipy==1.14.1
