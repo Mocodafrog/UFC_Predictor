@@ -11,7 +11,7 @@ df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
 
 # Asegurarse de que las columnas del modelo se carguen correctamente
 X = pd.read_csv('data/X_columns.csv')  # Aquí deberías tener las columnas de entrenamiento
-columnas_X = X.columns
+X_columns = X.columns
 
 # Crear DataFrame para la pelea futura basado en los datos de los últimos 5 combates
 def crear_dataframe_pelea(fighter_1, fighter_2, df_estadisticas_ultimos_5):
