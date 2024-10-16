@@ -27,14 +27,16 @@ import openpyxl
 
 import os
 
-# Verificar si el directorio 'data' existe, y si no, crearlo
-if not os.path.exists('data'):
-    os.makedirs('data')
+data_dir = os.path.join(os.getcwd(), 'data')
+models_dir = os.path.join(os.getcwd(), 'models')
 
+# Crear directorios si no existen
+os.makedirs(data_dir, exist_ok=True)
+os.makedirs(models_dir, exist_ok=True)
 
-# Verificar si el directorio 'models' existe, y si no, crearlo
-if not os.path.exists('models'):
-    os.makedirs('models')
+# Guardar el archivo en el directorio 'data'
+csv_path = os.path.join(data_dir, 'columnas_X.csv')
+pd.DataFrame(columnas_X).to_csv(csv_path, index=False, header=False)
 
 
 # Inicializar listas para almacenar los datos de todos los peleadores
