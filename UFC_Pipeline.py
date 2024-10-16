@@ -25,6 +25,17 @@ from sklearn.inspection import permutation_importance
 import joblib
 import openpyxl 
 
+import os
+
+# Verificar si el directorio 'data' existe, y si no, crearlo
+if not os.path.exists('data'):
+    os.makedirs('data')
+
+
+# Verificar si el directorio 'models' existe, y si no, crearlo
+if not os.path.exists('models'):
+    os.makedirs('models')
+
 
 # Inicializar listas para almacenar los datos de todos los peleadores
 full_names = []
