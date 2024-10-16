@@ -29,7 +29,7 @@ jobs:
 
     - name: Commit updated models
       run: |
-        git add stacking_winner_model.pkl stacking_method_model.pkl df_estadisticas_ultimos_5.csv X_columns.csv
+        git add stacking_winner_model.pkl stacking_method_model.pkl df_estadisticas_ultimos_5.csv columnas_X.csv
         git commit -m "Updated models and data"
         git push
 
