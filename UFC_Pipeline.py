@@ -27,16 +27,7 @@ import openpyxl
 
 import os
 
-data_dir = os.path.join(os.getcwd(), 'data')
-models_dir = os.path.join(os.getcwd(), 'models')
 
-# Crear directorios si no existen
-os.makedirs(data_dir, exist_ok=True)
-os.makedirs(models_dir, exist_ok=True)
-
-# Guardar el archivo en el directorio 'data'
-csv_path = os.path.join(data_dir, 'columnas_X.csv')
-pd.DataFrame(columnas_X).to_csv(csv_path, index=False, header=False)
 
 
 # Inicializar listas para almacenar los datos de todos los peleadores
@@ -953,14 +944,33 @@ df_unificado = unificar_estadisticas(fight_stats_winsorized)
 df_estadisticas_ultimos_5 = calcular_ultimos_5_combates(df_unificado)
 
 
+# Definir rutas relativas
+DATA_DIR = os.path.join(os.getcwd(), 'data')
+MODELS_DIR = os.path.join(os.getcwd(), 'models')
+
+# Crear los directorios si no existen
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+if not os.path.exists(MODELS_DIR):
+    os.makedirs(MODELS_DIR, exist_ok=True)
+
+
+
+# Guardar las columnas del DataFrame X en 'data/columnas_X.csv'
 columnas_X = X.columns  # Aquí usas las columnas de tu DataFrame de características X
-pd.DataFrame(columnas_X).to_csv('data/columnas_X.csv', index=False, header=False)
+columnas_X_path = os.path.join(DATA_DIR, 'columnas_X.csv')
+pd.DataFrame(columnas_X).to_csv(columnas_X_path, index=False, header=False)
 
-# Guardar el modelo de ganador
-joblib.dump(stacking_winner, 'models/stacking_winner.pkl')
+# Guardar el modelo de ganador en 'models/stacking_winner.pkl'
+stacking_winner_path = os.path.join(MODELS_DIR, 'stacking_winner.pkl')
+joblib.dump(stacking_winner, stacking_winner_path)
 
-# Guardar el modelo de método de pelea
-joblib.dump(stacking_method, 'models/stacking_method.pkl')
+# Guardar el modelo de método de pelea en 'models/stacking_method.pkl'
+stacking_method_path = os.path.join(MODELS_DIR, 'stacking_method.pkl')
+joblib.dump(stacking_method, stacking_method_path)
 
-df_estadisticas_ultimos_5.to_csv('data/df_estadisticas_ultimos_5.csv', index=False)
+# Guardar las estadísticas de los últimos 5 combates en 'data/df_estadisticas_ultimos_5.csv'
+estadisticas_path = os.path.join(DATA_DIR, 'df_estadisticas_ultimos_5.csv')
+df_estadisticas_ultimos_5.to_csv(estadisticas_path, index=False)
 
