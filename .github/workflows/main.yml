@@ -42,5 +42,5 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
-        git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/Mocodafrog/UFC_Predictor.git HEAD:main || echo "No hay cambios para subir."
+        git push https://${{ secrets.GH_TOKEN }}@github.com/Mocodafrog/UFC_Predictor.git HEAD:main || echo "No hay cambios para subir."
 
