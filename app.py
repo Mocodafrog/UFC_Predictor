@@ -3,14 +3,14 @@ import joblib
 import pandas as pd
 
 # Cargar los modelos entrenados
-stacking_winner = joblib.load('models/stacking_winner.pkl')
-stacking_method = joblib.load('models/stacking_method.pkl')
+stacking_winner = joblib.load('stacking_winner.pkl')
+stacking_method = joblib.load('stacking_method.pkl')
 
 # Cargar los datos preprocesados
-df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
+df_estadisticas_ultimos_5 = pd.read_csv('df_estadisticas_ultimos_5.csv')
 
 # Asegurarse de que las columnas del modelo se carguen correctamente
-columnas_X = pd.read_csv('data/columnas_X.csv', header=None).squeeze().tolist()
+columnas_X = pd.read_csv('columnas_X.csv', header=None).squeeze().tolist()
 
 # Crear DataFrame para la pelea futura basado en los datos de los últimos 5 combates
 def crear_dataframe_pelea(fighter_1, fighter_2, df_estadisticas_ultimos_5):
@@ -40,12 +40,14 @@ st.title('Predicción de Resultados de Peleas de UFC')
 # Selección de peleadores de la lista desplegable (completado automático)
 fighters_list = df_estadisticas_ultimos_5['fighter'].unique()
 
-fighter_1 = st.selectbox('Selecciona el primer peleador:', fighters_list)
-fighter_2 = st.selectbox('Selecciona el segundo peleador:', fighters_list)
+# Selección de peleadores de la lista desplegable (completado automático)
+fighter_1 = st.selectbox('Selecciona el primer peleador:', fighters_list, key='fighter_1')
+fighter_2 = st.selectbox('Selecciona el segundo peleador:', fighters_list, key='fighter_2')
+
 
 # Selección de formato (se convierte a valor numérico según tu tabla)
 format_mapping = {'3 Rnd (5-5-5)': 0, '3 Rnd + OT (5-5-5-5)': 1, '5 Rnd (5-5-5-5-5)': 2}
-format_selection = st.selectbox('Selecciona el formato de la pelea:', list(format_mapping.keys()))
+format_selection = st.selectbox('Selecciona el formato de la pelea:', list(format_mapping.keys()), key='format_selection')
 format_input = format_mapping[format_selection]
 
 # Selección de clase de peso (se convierte a valor numérico según tu tabla)
@@ -54,7 +56,7 @@ weight_class_mapping = {
     'Light Heavyweight': 5, 'Lightweight': 6, 'Middleweight': 7, 'Welterweight': 8, 'Women\'s Bantamweight': 9,
     'Women\'s Featherweight': 10, 'Women\'s Flyweight': 11, 'Women\'s Strawweight': 12
 }
-weight_class_selection = st.selectbox('Selecciona la clase de peso:', list(weight_class_mapping.keys()))
+weight_class_selection = st.selectbox('Selecciona la clase de peso:', list(weight_class_mapping.keys()), key='weight_class_selection')
 weight_class_input = weight_class_mapping[weight_class_selection]
 
 # Forma actual de los peleadores (se convierte a valor numérico según tu tabla)
@@ -69,8 +71,9 @@ form_mapping = {
     "WWL": 49, "WWLL": 50, "WWLLL": 51, "WWLLW": 52, "WWLW": 53, "WWLWL": 54, "WWLWW": 55,
     "WWW": 56, "WWWL": 57, "WWWLL": 58, "WWWLW": 59, "WWWW": 60, "WWWWL": 61, "WWWWW": 62
 }
-form_fighter_1 = st.selectbox(f'Introduce la forma de {fighter_1}:', list(form_mapping.keys()))
-form_fighter_2 = st.selectbox(f'Introduce la forma de {fighter_2}:', list(form_mapping.keys()))
+# Forma actual de los peleadores (con clave única)
+form_fighter_1 = st.selectbox(f'Introduce la forma de {fighter_1}:', list(form_mapping.keys()), key='form_fighter_1')
+form_fighter_2 = st.selectbox(f'Introduce la forma de {fighter_2}:', list(form_mapping.keys()), key='form_fighter_2')
 
 form_last_5_fighter_1 = form_mapping[form_fighter_1]
 form_last_5_fighter_2 = form_mapping[form_fighter_2]
@@ -78,31 +81,6 @@ form_last_5_fighter_2 = form_mapping[form_fighter_2]
 # Crear el DataFrame de la pelea futura con estos valores
 df_pelea_futura = crear_dataframe_pelea(fighter_1, fighter_2, df_estadisticas_ultimos_5)
 
-if df_pelea_futura is not None:
-    # Agregar los valores adicionales
-    df_pelea_futura['Format'] = format_input
-    df_pelea_futura['form_last_5_figther_1'] = form_last_5_fighter_1
-    df_pelea_futura['form_last_5_figther_2'] = form_last_5_fighter_2
-    df_pelea_futura['Weight Class'] = weight_class_input
-
-    # Asegurarse de que el DataFrame tenga las mismas columnas en el mismo orden que el modelo espera
-    columnas_faltantes = set(columnas_X) - set(df_pelea_futura.columns)
-    columnas_adicionales = set(df_pelea_futura.columns) - set(columnas_X)
-
-    if columnas_faltantes:
-        st.error(f"Error: Faltan las siguientes columnas en el DataFrame: {columnas_faltantes}")
-    elif columnas_adicionales:
-        st.warning(f"Advertencia: Hay columnas adicionales en el DataFrame que no se esperaban: {columnas_adicionales}")
-    else:
-        # Asegurarse de que las columnas estén en el orden correcto
-        df_pelea_futura = df_pelea_futura[columnas_X]
-
-
-
-        # Botón para hacer la predicción
-        if st.button('Hacer Predicción'):
-            hacer_prediccion_winner(stacking_winner, df_pelea_futura, fighter_1, fighter_2)
-            hacer_prediccion_method(stacking_method, df_pelea_futura)
 
 # Función para hacer la predicción del ganador
 def hacer_prediccion_winner(stacking_winner, df_pelea_futura, fighter_1, fighter_2):
@@ -140,6 +118,34 @@ def hacer_prediccion_method(stacking_method, df_pelea_futura):
         st.write(f"{method_mapping[1]}: {method_1_proba:.2f}%")
         st.write(f"{method_mapping[2]}: {method_2_proba:.2f}%")
         st.write(f"Predicción del método: {method_mapping[pred_method[0]]}")
+
+if df_pelea_futura is not None:
+    # Agregar los valores adicionales
+    df_pelea_futura['Format'] = format_input
+    df_pelea_futura['form_last_5_figther_1'] = form_last_5_fighter_1
+    df_pelea_futura['form_last_5_figther_2'] = form_last_5_fighter_2
+    df_pelea_futura['Weight Class'] = weight_class_input
+
+    # Asegurarse de que el DataFrame tenga las mismas columnas en el mismo orden que el modelo espera
+    columnas_faltantes = set(columnas_X) - set(df_pelea_futura.columns)
+    columnas_adicionales = set(df_pelea_futura.columns) - set(columnas_X)
+
+    if columnas_faltantes:
+        st.error(f"Error: Faltan las siguientes columnas en el DataFrame: {columnas_faltantes}")
+    elif columnas_adicionales:
+        st.warning(f"Advertencia: Hay columnas adicionales en el DataFrame que no se esperaban: {columnas_adicionales}")
+    else:
+        # Asegurarse de que las columnas estén en el orden correcto
+        df_pelea_futura = df_pelea_futura[columnas_X]
+
+
+
+        # Botón para hacer la predicción
+        if st.button('Hacer Predicción'):
+            hacer_prediccion_winner(stacking_winner, df_pelea_futura, fighter_1, fighter_2)
+            hacer_prediccion_method(stacking_method, df_pelea_futura)
+
+
 
 
 
