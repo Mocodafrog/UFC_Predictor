@@ -3,14 +3,14 @@ import joblib
 import pandas as pd
 
 # Cargar los modelos entrenados
-stacking_winner = joblib.load('stacking_winner.pkl')
-stacking_method = joblib.load('stacking_method.pkl')
+stacking_winner = joblib.load('models/stacking_winner.pkl')
+stacking_method = joblib.load('models/stacking_method.pkl')
 
 # Cargar los datos preprocesados
-df_estadisticas_ultimos_5 = pd.read_csv('df_estadisticas_ultimos_5.csv')
+df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
 
 # Asegurarse de que las columnas del modelo se carguen correctamente
-columnas_X = pd.read_csv('columnas_X.csv', header=None).squeeze().tolist()
+columnas_X = pd.read_csv('data/columnas_X.csv', header=None).squeeze().tolist()
 
 # Crear DataFrame para la pelea futura basado en los datos de los últimos 5 combates
 def crear_dataframe_pelea(fighter_1, fighter_2, df_estadisticas_ultimos_5):
