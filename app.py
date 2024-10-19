@@ -4,13 +4,13 @@ import joblib
 import numpy as np
 
 # Cargar los modelos entrenados
-stacking_winner = joblib.load('stacking_winner.pkl')
-stacking_method = joblib.load('stacking_method.pkl')
+stacking_winner = joblib.load('models/stacking_winner.pkl')
+stacking_method = joblib.load('models/stacking_method.pkl')
 
 # Cargar los datos preprocesados
-df_estadisticas_ultimos_5 = pd.read_csv('df_estadisticas_ultimos_5.csv')
-columnas_X = pd.read_csv('columnas_X.csv', header=None).squeeze().tolist()
-fight_stats = pd.read_csv('fight_stats.csv')
+df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
+columnas_X = pd.read_csv('data/columnas_X.csv', header=None).squeeze().tolist()
+fight_stats = pd.read_csv('data/fight_stats.csv')
 
 def preparar_columnas(stats, prefix):
     stats = stats.drop(columns=['fighter']).reset_index(drop=True)
