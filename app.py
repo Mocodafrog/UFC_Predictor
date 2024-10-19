@@ -1,20 +1,75 @@
+import pandas as pd
 import streamlit as st
 import joblib
-import pandas as pd
+import numpy as np
 
 # Cargar los modelos entrenados
-stacking_winner = joblib.load('models/stacking_winner.pkl')
-stacking_method = joblib.load('models/stacking_method.pkl')
+stacking_winner = joblib.load('stacking_winner.pkl')
+stacking_method = joblib.load('stacking_method.pkl')
 
 # Cargar los datos preprocesados
-df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
+df_estadisticas_ultimos_5 = pd.read_csv('df_estadisticas_ultimos_5.csv')
+columnas_X = pd.read_csv('columnas_X.csv', header=None).squeeze().tolist()
+fight_stats = pd.read_csv('fight_stats.csv')
 
-# Asegurarse de que las columnas del modelo se carguen correctamente
-columnas_X = pd.read_csv('data/columnas_X.csv', header=None).squeeze().tolist()
+def preparar_columnas(stats, prefix):
+    stats = stats.drop(columns=['fighter']).reset_index(drop=True)
+    stats.columns = [f"{col}_{prefix}" for col in stats.columns]
+    return stats
 
-# Crear DataFrame para la pelea futura basado en los datos de los últimos 5 combates
+def calcular_metricas(df):
+    for fighter in [1, 2]:
+        prefix = f'figther_{fighter}'
+        
+        # Golpes significativos
+        df[f'Sig_Str_Acc_{prefix}'] = df[f'landed_sig. str._{prefix}'] / df[f'atmp_sig. str._{prefix}'].replace(0, 1)
+        df[f'Sig_Str_LpM_{prefix}'] = df[f'landed_sig. str._{prefix}'] / (df[f'Total_fight_length_sec_{prefix}'] / 60)
+
+        # Golpes totales
+        df[f'Total_Str_Acc_{prefix}'] = df[f'landed_total str._{prefix}'] / df[f'atmp_total str._{prefix}'].replace(0, 1)
+        df[f'Total_Str_LpM_{prefix}'] = df[f'landed_total str._{prefix}'] / (df[f'Total_fight_length_sec_{prefix}'] / 60)
+
+        # Golpes a la cabeza
+        df[f'Head_Str_Acc_{prefix}'] = df[f'landed_head_{prefix}'] / df[f'atmp_head_{prefix}'].replace(0, 1)
+        df[f'Head_Str_LpM_{prefix}'] = df[f'landed_head_{prefix}'] / (df[f'Total_fight_length_sec_{prefix}'] / 60)
+
+        # Golpes al cuerpo
+        df[f'Body_Str_Acc_{prefix}'] = df[f'landed_body_{prefix}'] / df[f'atmp_body_{prefix}'].replace(0, 1)
+        df[f'Body_Str_LpM_{prefix}'] = df[f'landed_body_{prefix}'] / (df[f'Total_fight_length_sec_{prefix}'] / 60)
+
+        # Golpes a las piernas
+        df[f'Leg_Str_Acc_{prefix}'] = df[f'landed_leg_{prefix}'] / df[f'atmp_leg_{prefix}'].replace(0, 1)
+        df[f'Leg_Str_LpM_{prefix}'] = df[f'landed_leg_{prefix}'] / (df[f'Total_fight_length_sec_{prefix}'] / 60)
+
+        # Golpes a distancia
+        df[f'Distance_Str_Acc_{prefix}'] = df[f'landed_distance_{prefix}'] / df[f'atmp_distance_{prefix}'].replace(0, 1)
+        df[f'Distance_Str_LpM_{prefix}'] = df[f'landed_distance_{prefix}'] / (df[f'Total_fight_length_sec_{prefix}'] / 60)
+
+        # Golpes en el clinch
+        df[f'Clinch_Str_Acc_{prefix}'] = df[f'landed_clinch_{prefix}'] / df[f'atmp_clinch_{prefix}'].replace(0, 1)
+        df[f'Clinch_Str_LpM_{prefix}'] = df[f'landed_clinch_{prefix}'] / (df[f'Total_fight_length_sec_{prefix}'] / 60)
+
+        # Golpes en el suelo
+        df[f'Ground_Str_Acc_{prefix}'] = df[f'landed_ground_{prefix}'] / df[f'atmp_ground_{prefix}'].replace(0, 1)
+        df[f'Ground_Str_LpM_{prefix}'] = df[f'landed_ground_{prefix}'] / (df[f'Total_fight_length_sec_{prefix}'] / 60)
+
+        # Promedio de derribos por minuto
+        df[f'TD_Avg_{prefix}'] = df[f'landed_td_{prefix}'] / (df[f'Total_fight_length_sec_{prefix}'] / 60)
+
+        # Precisión de derribos
+        df[f'TD_Acc_{prefix}'] = df[f'landed_td_{prefix}'] / df[f'atmp_td_{prefix}'].replace(0, 1)
+
+        # Defensa de derribos
+        df[f'TD_Def_{prefix}'] = 1 - (df.groupby('Fight')[f'landed_td_{prefix}']
+                                       .transform(lambda x: x.shift()).fillna(0) / df[f'atmp_td_{prefix}'].replace(0, 1))
+
+        # Ratio de control
+        df[f'Control_Ratio_{prefix}'] = df[f'Control Time Sec_{prefix}'] / df[f'Total_fight_length_sec_{prefix}'].replace(0, 1)
+
+    return df
+
+
 def crear_dataframe_pelea(fighter_1, fighter_2, df_estadisticas_ultimos_5):
-    # Obtener las estadísticas de los dos peleadores
     stats_fighter_1 = df_estadisticas_ultimos_5[df_estadisticas_ultimos_5['fighter'] == fighter_1]
     stats_fighter_2 = df_estadisticas_ultimos_5[df_estadisticas_ultimos_5['fighter'] == fighter_2]
 
@@ -22,27 +77,42 @@ def crear_dataframe_pelea(fighter_1, fighter_2, df_estadisticas_ultimos_5):
         st.error("No se encontraron estadísticas para uno o ambos peleadores.")
         return None
 
-    # Renombrar columnas para coincidir con fighter_1 y fighter_2
-    stats_fighter_1 = stats_fighter_1.drop(columns=['fighter'])
-    stats_fighter_1.columns = [col + '_figther_1' for col in stats_fighter_1.columns]
-    
-    stats_fighter_2 = stats_fighter_2.drop(columns=['fighter'])
-    stats_fighter_2.columns = [col + '_figther_2' for col in stats_fighter_2.columns]
+    stats_fighter_1 = preparar_columnas(stats_fighter_1, "figther_1")
+    stats_fighter_2 = preparar_columnas(stats_fighter_2, "figther_2")
 
-    # Unir las estadísticas de ambos peleadores en un solo DataFrame
-    df_pelea_futura = pd.concat([stats_fighter_1.reset_index(drop=True), stats_fighter_2.reset_index(drop=True)], axis=1)
+    df_pelea = pd.concat([stats_fighter_1, stats_fighter_2], axis=1)
+    return df_pelea
 
-    return df_pelea_futura
 
-# Título de la app
+
 st.title('Predicción de Resultados de Peleas de UFC')
+# Crear un DataFrame con la forma correspondiente para cada peleador
+forma_fighter_1 = fight_stats[['Fighter_figther_1', 'form_last_5_figther_1']].rename(
+    columns={'Fighter_figther_1': 'fighter', 'form_last_5_figther_1': 'form'}
+)
+forma_fighter_2 = fight_stats[['Fighter_figther_2', 'form_last_5_figther_2']].rename(
+    columns={'Fighter_figther_2': 'fighter', 'form_last_5_figther_2': 'form'}
+)
 
-# Selección de peleadores de la lista desplegable (completado automático)
-fighters_list = df_estadisticas_ultimos_5['fighter'].unique()
+# Combinar ambas formas en un solo DataFrame
+formas_combined = pd.concat([forma_fighter_1, forma_fighter_2]).drop_duplicates(subset='fighter')
 
-# Selección de peleadores de la lista desplegable (completado automático)
+# Unir 'formas_combined' con 'df_estadisticas_ultimos_5' para tener la forma disponible por peleador
+df_estadisticas_completo = pd.merge(
+    df_estadisticas_ultimos_5, formas_combined, on='fighter', how='left'
+)
+
+# Actualizamos la lista de peleadores
+fighters_list = df_estadisticas_completo['fighter'].unique()
+
+# Selección de peleadores con completado automático
 fighter_1 = st.selectbox('Selecciona el primer peleador:', fighters_list, key='fighter_1')
 fighter_2 = st.selectbox('Selecciona el segundo peleador:', fighters_list, key='fighter_2')
+
+# Obtener la forma correspondiente para los peleadores seleccionados
+forma_fighter_1 = df_estadisticas_completo[df_estadisticas_completo['fighter'] == fighter_1]['form'].values[0]
+forma_fighter_2 = df_estadisticas_completo[df_estadisticas_completo['fighter'] == fighter_2]['form'].values[0]
+
 
 
 # Selección de formato (se convierte a valor numérico según tu tabla)
@@ -72,78 +142,93 @@ form_mapping = {
     "WWW": 56, "WWWL": 57, "WWWLL": 58, "WWWLW": 59, "WWWW": 60, "WWWWL": 61, "WWWWW": 62
 }
 # Forma actual de los peleadores (con clave única)
-form_fighter_1 = st.selectbox(f'Introduce la forma de {fighter_1}:', list(form_mapping.keys()), key='form_fighter_1')
-form_fighter_2 = st.selectbox(f'Introduce la forma de {fighter_2}:', list(form_mapping.keys()), key='form_fighter_2')
+#form_fighter_1 = st.selectbox(f'Introduce la forma de {fighter_1}:', list(form_mapping.keys()), key='form_fighter_1')
+#form_fighter_2 = st.selectbox(f'Introduce la forma de {fighter_2}:', list(form_mapping.keys()), key='form_fighter_2')
 
-form_last_5_fighter_1 = form_mapping[form_fighter_1]
-form_last_5_fighter_2 = form_mapping[form_fighter_2]
+#form_last_5_fighter_1 = form_mapping[form_fighter_1]
+#form_last_5_fighter_2 = form_mapping[form_fighter_2]
 
-# Crear el DataFrame de la pelea futura con estos valores
+
 df_pelea_futura = crear_dataframe_pelea(fighter_1, fighter_2, df_estadisticas_ultimos_5)
 
+if df_pelea_futura is not None:
+    # Agregar los valores adicionales antes de la predicción
+    df_pelea_futura['Format'] = format_input
+    df_pelea_futura['Weight Class'] = weight_class_input
+    df_pelea_futura['form_last_5_figther_1'] = forma_fighter_1
+    df_pelea_futura['form_last_5_figther_2'] = forma_fighter_2
 
-# Función para hacer la predicción del ganador
-def hacer_prediccion_winner(stacking_winner, df_pelea_futura, fighter_1, fighter_2):
-    if df_pelea_futura is not None:
-        # Realizar la predicción
-        pred_winner = stacking_winner.predict(df_pelea_futura)
-        pred_proba_winner = stacking_winner.predict_proba(df_pelea_futura)
 
-        # Mostrar las probabilidades en porcentaje
-        fighter_1_proba = pred_proba_winner[0][0] * 100
-        fighter_2_proba = pred_proba_winner[0][1] * 100
+    # Asegurar el orden correcto de columnas
+    df_pelea_futura = df_pelea_futura[columnas_X]
 
-        st.write("\n--- Resultados de la Predicción del Ganador ---")
+    # Crear DataFrame invertido (figther_1 y figther_2 intercambiados)
+    df_pelea_invertida = df_pelea_futura.copy()
+
+    # Intercambiar las estadísticas entre figther_1 y figther_2
+    for col in df_pelea_futura.columns:
+        if '_figther_1' in col:
+            col_2 = col.replace('_figther_1', '_figther_2')
+            df_pelea_invertida[col], df_pelea_invertida[col_2] = (
+                df_pelea_invertida[col_2].values,
+                df_pelea_invertida[col].values,
+            )
+
+    # Asegurar que ambas tengan el mismo orden de columnas
+    df_pelea_invertida = df_pelea_invertida[columnas_X]
+
+    # Botón para hacer la predicción
+    if st.button('Hacer Predicción'):
+        # ---------------------------
+        # 1. Predicción del Ganador
+        # ---------------------------
+        # Primera predicción con el orden original
+        proba_1 = stacking_winner.predict_proba(df_pelea_futura)
+
+        # Segunda predicción con el orden invertido
+        proba_2 = stacking_winner.predict_proba(df_pelea_invertida)
+
+        # Promediar las probabilidades de ambas predicciones
+        proba_final = (proba_1 + proba_2[:, ::-1]) / 2
+
+        # Obtener la predicción final basada en el promedio de probabilidades
+        pred_final = np.argmax(proba_final, axis=1)
+
+        # Mostrar las probabilidades finales en porcentaje
+        fighter_1_proba = proba_final[0][0] * 100
+        fighter_2_proba = proba_final[0][1] * 100
+
+        st.write("\n--- Predicción del Ganador ---")
         st.write(f"{fighter_1}: {fighter_1_proba:.2f}%")
         st.write(f"{fighter_2}: {fighter_2_proba:.2f}%")
-        st.write(f"Predicción del ganador: {fighter_2 if pred_winner[0] == 1 else fighter_1}")
+        st.write(f"Ganador: {fighter_2 if pred_final[0] == 1 else fighter_1}")
 
-# Función para hacer la predicción del método de pelea
-def hacer_prediccion_method(stacking_method, df_pelea_futura):
-    if df_pelea_futura is not None:
-        # Realizar la predicción
-        pred_method = stacking_method.predict(df_pelea_futura)
-        pred_proba_method = stacking_method.predict_proba(df_pelea_futura)
+        # --------------------------------------
+        # 2. Predicción del Método de Pelea
+        # --------------------------------------
+        # Primera predicción del método con el orden original
+        # Primera predicción del método con el orden original
+        proba_method_1 = stacking_method.predict_proba(df_pelea_futura)
+
+        # Segunda predicción del método con el orden invertido
+        proba_method_2 = stacking_method.predict_proba(df_pelea_invertida)
+
+        # Aseguramos que las probabilidades estén alineadas correctamente
+        # No es necesario invertir las columnas aquí ya que los métodos (Decision, KO/TKO, Submission) no dependen del orden del peleador
+        proba_method_final = (proba_method_1 + proba_method_2) / 2
+
+        # Obtener la predicción final basada en el promedio de probabilidades
+        pred_method_final = np.argmax(proba_method_final, axis=1)
 
         # Mapear los métodos
         method_mapping = {0: 'Decision', 1: 'KO/TKO', 2: 'Submission'}
-        
-        # Mostrar las probabilidades en porcentaje
-        method_0_proba = pred_proba_method[0][0] * 100
-        method_1_proba = pred_proba_method[0][1] * 100
-        method_2_proba = pred_proba_method[0][2] * 100
 
-        st.write("\n--- Resultados de la Predicción del Método de Pelea ---")
-        st.write(f"{method_mapping[0]}: {method_0_proba:.2f}%")
-        st.write(f"{method_mapping[1]}: {method_1_proba:.2f}%")
-        st.write(f"{method_mapping[2]}: {method_2_proba:.2f}%")
-        st.write(f"Predicción del método: {method_mapping[pred_method[0]]}")
+        # Mostrar las probabilidades finales del método en porcentaje
+        st.write("\n--- Predicción del Método de Pelea ---")
+        for i, prob in enumerate(proba_method_final[0]):
+            st.write(f"{method_mapping[i]}: {prob * 100:.2f}%")
 
-if df_pelea_futura is not None:
-    # Agregar los valores adicionales
-    df_pelea_futura['Format'] = format_input
-    df_pelea_futura['form_last_5_figther_1'] = form_last_5_fighter_1
-    df_pelea_futura['form_last_5_figther_2'] = form_last_5_fighter_2
-    df_pelea_futura['Weight Class'] = weight_class_input
-
-    # Asegurarse de que el DataFrame tenga las mismas columnas en el mismo orden que el modelo espera
-    columnas_faltantes = set(columnas_X) - set(df_pelea_futura.columns)
-    columnas_adicionales = set(df_pelea_futura.columns) - set(columnas_X)
-
-    if columnas_faltantes:
-        st.error(f"Error: Faltan las siguientes columnas en el DataFrame: {columnas_faltantes}")
-    elif columnas_adicionales:
-        st.warning(f"Advertencia: Hay columnas adicionales en el DataFrame que no se esperaban: {columnas_adicionales}")
-    else:
-        # Asegurarse de que las columnas estén en el orden correcto
-        df_pelea_futura = df_pelea_futura[columnas_X]
-
-
-
-        # Botón para hacer la predicción
-        if st.button('Hacer Predicción'):
-            hacer_prediccion_winner(stacking_winner, df_pelea_futura, fighter_1, fighter_2)
-            hacer_prediccion_method(stacking_method, df_pelea_futura)
+        st.write(f"Método Predicho: {method_mapping[pred_method_final[0]]}")
 
 
 
