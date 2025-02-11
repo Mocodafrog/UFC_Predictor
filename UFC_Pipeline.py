@@ -7,22 +7,6 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from scipy.stats import mstats
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import accuracy_score, classification_report, roc_auc_score
-from xgboost import XGBClassifier
-from lightgbm import LGBMClassifier
-from catboost import CatBoostClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, ExtraTreesClassifier
-from sklearn.neural_network import MLPClassifier
-import tensorflow as tf
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from sklearn.model_selection import cross_val_score, StratifiedKFold
-from sklearn.metrics import make_scorer, roc_auc_score, accuracy_score
-from sklearn.ensemble import VotingClassifier, StackingClassifier
-from sklearn.inspection import permutation_importance
-import joblib
 import openpyxl 
 
 import os
@@ -831,7 +815,7 @@ DATA_DIR = os.path.abspath('data')
 
 # Crear los directorios si no existen
 os.makedirs(DATA_DIR, exist_ok=True)
-os.makedirs(MODELS_DIR, exist_ok=True)
+
 
 # Guardar las columnas del DataFrame X en 'data/columnas_X.csv'
 columnas_X = X.columns  # Aquí usas las columnas de tu DataFrame de características X
