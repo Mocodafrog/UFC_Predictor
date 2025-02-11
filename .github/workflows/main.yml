@@ -34,7 +34,7 @@ jobs:
 
     - name: Comprobar cambios en modelos y datos
       run: |
-        git add data/ models/
+        git add data/ 
         git diff --quiet && echo "No hay cambios para commitear." || git commit -m "Actualización semanal de modelos y datos"
 
     - name: Subir cambios al repositorio
