@@ -3,7 +3,7 @@ name: UFC Prediction Pipeline
 on:
   schedule:
     - cron: "0 7 * * 2"  # Ejecutar a las 7 AM UTC cada martes
-  workflow_dispatch:
+  workflow_dispatch:  # Permite ejecutar manualmente el pipeline desde GitHub Actions
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: 3.12.4
+        python-version: "3.12"
 
     - name: Install dependencies
       run: |
@@ -27,20 +27,19 @@ jobs:
       run: |
         python UFC_Pipeline.py
 
-    - name: Crear directorios si no existen
-      run: |
-        mkdir -p data models
-
     - name: Configurar git para commit
       run: |
         git config --global user.name "GitHub Actions Bot"
         git config --global user.email "actions@github.com"
+
+    - name: Comprobar cambios en modelos y datos
+      run: |
         git add data/ models/
-        git commit -m "Actualización semanal de modelos y datos" || echo "No hay cambios para commitear."
+        git diff --quiet && echo "No hay cambios para commitear." || git commit -m "Actualización semanal de modelos y datos"
 
     - name: Subir cambios al repositorio
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
-        git push https://${{ secrets.GH_TOKEN }}@github.com/Mocodafrog/UFC_Predictor.git HEAD:main || echo "No hay cambios para subir."
-
+        git pull --rebase origin main || echo "No hay cambios remotos."
+        git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main || echo "No hay cambios para subir."
