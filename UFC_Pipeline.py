@@ -426,7 +426,9 @@ fighters_df['birthdate'] = fighters_df['birthdate'].apply(lambda x: re.search(r'
 # Reordenar el DataFrame con 'fighter_id', 'full_name', seguido de las medidas y luego victorias, derrotas y empates
 fighters_df = fighters_df[['fighter_id', 'full_name', 'height_cm', 'weight_kg', 'reach_cm', 'stance', 'wins', 'losses', 'draws','birthdate']]
 
+# Crear una copia del DataFrame original para mantenerlo intacto
 fight_stats = df.copy()
+
 events.rename(columns={'Event Name': 'Event'}, inplace=True)
 
 
@@ -487,8 +489,10 @@ category_normalization = {
     'Road to UFC 1 Flyweight Tournament Title Bout': 'Flyweight',
     'TUF Nations Canada vs. Australia Middleweight Tournament Title Bout': 'Middleweight',
     'TUF Nations Canada vs. Australia Welterweight Tournament Title Bout': 'Welterweight',
+
     
     # Ultimate Fighter Torneos
+    'Ultimate Fighter 2 Welterweight Tournament Title Bout' : 'Welterweight',
     'Ultimate Fighter 1 Light Heavyweight Tournament Title Bout': 'Light Heavyweight',
     'Ultimate Fighter 1 Middleweight Tournament Title Bout': 'Middleweight',
     'Ultimate Fighter 10 Heavyweight Tournament Title Bout': 'Heavyweight',
@@ -511,7 +515,7 @@ category_normalization = {
     'Ultimate Fighter 3 Middleweight Tournament Title Bout': 'Middleweight',
     'Ultimate Fighter 4 Middleweight Tournament Title Bout': 'Middleweight',
     'Ultimate Fighter 4 Welterweight Tournament Title Bout': 'Welterweight',
-    'Ultimate Fighter 5 Lightweight Tournament Title Bout': 'Lightweight ',
+    'Ultimate Fighter 5 Lightweight Tournament Title Bout': 'Lightweight',
     'Ultimate Fighter 6 Welterweight Tournament Title Bout': 'Welterweight',
     'Ultimate Fighter 7 Middleweight Tournament Title Bout': 'Middleweight',
     'Ultimate Fighter 8 Light Heavyweight Tournament Title Bout': 'Light Heavyweight',
@@ -681,51 +685,49 @@ columns_to_drop = ['Fight_lenght', 'Location', 'total_wins', 'total_losses', 'to
 fight_stats.drop(columns=columns_to_drop, inplace=True)
 
 
-fight_stats = fight_stats.groupby(['Event', 'Fight']).apply(
-    lambda x: pd.concat(
-        [x.iloc[0].add_suffix('_figther_1'), x.iloc[1].add_suffix('_figther_2')]
-    ) if len(x) == 2 else None  # Aseguramos que solo opere si hay exactamente dos peleadores
-)
+#fight_stats = fight_stats.groupby(['Event', 'Fight']).apply(
+#    lambda x: pd.concat(
+#        [x.iloc[0].add_suffix('_figther_1'), x.iloc[1].add_suffix('_figther_2')]
+#    ) if len(x) == 2 else None  # Aseguramos que solo opere si hay exactamente dos peleadores
+#)
 
 # Eliminamos filas que son None
 fight_stats = fight_stats.dropna()
-fight_stats = fight_stats.sort_values(by='Date_figther_1', ascending=False)
+fight_stats = fight_stats.sort_values(by='Date', ascending=False)
 
 # Reiniciamos el índice para evitar problemas con índices agrupados
 fight_stats = fight_stats.reset_index(drop=True)
 
 # Eliminar solo las columnas innecesarias y mantener Event y Fight
-columns_to_drop = ['Date_figther_1', 'Referee_figther_1', 'fighter_id_figther_1',  
-                   'Date_figther_2', 'Referee_figther_2', 'fighter_id_figther_2',
-                   'weight_kg_figther_2','weight_kg_figther_1']
+columns_to_drop = ['Date', 'Referee', 'fighter_id',  'weight_kg']
 fight_stats = fight_stats.drop(columns=columns_to_drop)
 
 
 
 # Eliminar columnas redundantes, dejando solo una versión de cada atributo
-fight_stats = fight_stats.drop(columns=[
-    'Event_figther_2', 'Fight_figther_2',  'Weight Class_figther_2',
-    'Method_figther_2', 'Format_figther_2'
-])
+#fight_stats = fight_stats.drop(columns=[
+#    'Event_figther_2', 'Fight_figther_2',  'Weight Class_figther_2',
+#    'Method_figther_2', 'Format_figther_2'
+#])
 
 # Unir los valores de Event, Fight, Winner, etc. en una sola columna
-fight_stats['Event'] = fight_stats['Event_figther_1']
-fight_stats['Fight'] = fight_stats['Fight_figther_1']
-fight_stats['Weight Class'] = fight_stats['Weight Class_figther_1']
-fight_stats['Method'] = fight_stats['Method_figther_1']
-fight_stats['Format'] = fight_stats['Format_figther_1']
+#fight_stats['Event'] = fight_stats['Event_figther_1']
+#fight_stats['Fight'] = fight_stats['Fight_figther_1']
+#fight_stats['Weight Class'] = fight_stats['Weight Class_figther_1']
+#fight_stats['Method'] = fight_stats['Method_figther_1']
+#fight_stats['Format'] = fight_stats['Format_figther_1']
 
 # Eliminar las columnas originales ahora redundantes
-fight_stats = fight_stats.drop(columns=[
-    'Event_figther_1', 'Fight_figther_1', 'Weight Class_figther_1',
-    'Method_figther_1', 'Format_figther_1'
-])
+#fight_stats = fight_stats.drop(columns=[
+#    'Event_figther_1', 'Fight_figther_1', 'Weight Class_figther_1',
+#    'Method_figther_1', 'Format_figther_1'
+#])
 
 # Creamos un LabelEncoder para cada columna categórica
 label_encoder = LabelEncoder()
 category_mappings = {}
 # Lista de columnas que serán codificadas
-columns_to_encode = ['Method', 'Winner_figther_1', 'Winner_figther_2', 'form_last_5_figther_1', 'form_last_5_figther_2','Format', 'stance_figther_1', 'stance_figther_2','Weight Class']
+columns_to_encode = ['Method', 'Winner', 'form_last_5','Format', 'stance','Weight Class']
 # Aplicamos LabelEncoder a cada columna y guardamos los mapeos
 for col in columns_to_encode:
     le = LabelEncoder()
@@ -746,8 +748,7 @@ cols_order = ['Event', 'Fight', 'Weight Class', 'Method', 'Format'] + \
 
 
 # Reemplazar valores no numéricos y convertir a enteros
-columns_to_convert = ['KD_figther_1', 'Sub. Att_figther_1', 'Reversal_figther_1',
-                      'KD_figther_2', 'Sub. Att_figther_2', 'Reversal_figther_2']
+columns_to_convert = ['KD', 'Sub. Att', 'Reversal',]
 
 # Convertir las columnas a tipo numérico, manejando posibles errores o valores no numéricos
 for col in columns_to_convert:
@@ -764,11 +765,10 @@ fight_stats = fight_stats[cols_order]
 
 
 # Eliminar las columnas innecesarias
-columns_to_drop = ['Control Time_figther_1', 'Control Time_figther_2','Fight_lenght Sec_figther_1','Fight_lenght Sec_figther_2']
+columns_to_drop = ['Control Time','Fight_lenght Sec']
 
 # Actualizamos el DataFrame eliminando las columnas
 fight_stats = fight_stats.drop(columns=columns_to_drop)
-
 
 with pd.ExcelWriter('category_mappings.xlsx') as writer:
     for col, mapping_df in category_mappings.items():
@@ -776,8 +776,8 @@ with pd.ExcelWriter('category_mappings.xlsx') as writer:
         
 
 # Listamos las columnas categóricas (que no queremos escalar)
-categorical_columns = ['Weight Class', 'Method', 'Rounds_figther_2','Rounds_figther_1', 'Format', 'Winner_figther_1', 'Winner_figther_2', 
-                       'stance_figther_1', 'stance_figther_2', 'form_last_5_figther_1', 'form_last_5_figther_2']
+categorical_columns = ['Weight Class', 'Method', 'Rounds', 'Format',  'Winner', 
+                       'stance', 'form_last_5']
 
 # Identificamos las columnas numéricas que no son categóricas
 numeric_columns = fight_stats.select_dtypes(include=['float64', 'int64']).columns
@@ -789,14 +789,14 @@ for col in numeric_columns:
     fight_stats_winsorized[col] = mstats.winsorize(fight_stats[col], limits=[0.05, 0.05])
 
 # Escalar solo las columnas numéricas no categóricas
-scaler = StandardScaler()
-fight_stats_winsorized[numeric_columns] = scaler.fit_transform(fight_stats_winsorized[numeric_columns])
+#scaler = StandardScaler()
+#fight_stats_winsorized[numeric_columns] = scaler.fit_transform(fight_stats_winsorized[numeric_columns])
 
 
 # Definir las características (X) y la variable objetivo (y)
-X = fight_stats_winsorized.drop(columns=['Winner_figther_1', 'Winner_figther_2', 'Method', 'Event', 'Fight', 'Fighter_figther_1', 'Fighter_figther_2'])
-y_winner = fight_stats_winsorized['Winner_figther_1']  
-y_method = fight_stats_winsorized['Method']
+X = fight_stats.drop(columns=['Winner', 'Method', 'Event', 'Fight', 'Fighter'])
+y_winner = fight_stats['Winner']  
+y_method = fight_stats['Method']
 
 # Dividir los datos en conjuntos de entrenamiento y prueba
 X_train, X_test, y_train_winner, y_test_winner = train_test_split(X, y_winner, test_size=0.2, random_state=42)
@@ -854,17 +854,20 @@ models = {
     })
 }
 
-# **Modelos y parámetros para predicción del GANADOR**
+
 base_models_winner = [
-    ('xgb', XGBClassifier(learning_rate=0.1, max_depth=3, n_estimators=200)),
-    ('lgbm', LGBMClassifier(learning_rate=0.1, max_depth=5, n_estimators=100)),
-    ('catboost', CatBoostClassifier(verbose=0, depth=7, iterations=200, learning_rate=0.1)),
-    ('rf', RandomForestClassifier(max_depth=20, min_samples_split=2, n_estimators=100)),
-    ('gb', GradientBoostingClassifier(learning_rate=0.1, max_depth=3, n_estimators=200))
+    ('XGBoost', XGBClassifier(learning_rate=0.1, max_depth=5, n_estimators=100)),
+    ('LightGBM', LGBMClassifier(learning_rate=0.1, max_depth=3, n_estimators=200)),
+    ('CatBoost', CatBoostClassifier(depth=5, iterations=200, learning_rate=0.1)),
+    ('RandomForest', RandomForestClassifier(max_depth=20, min_samples_split=2, n_estimators=100)),
+    ('GradientBoosting', GradientBoostingClassifier(learning_rate=0.1, max_depth=5, n_estimators=200)),
+    ('LogisticRegression', LogisticRegression(C=10, solver='liblinear',max_iter=500 )),  # C=10 confirmado
+    ('ExtraTrees', ExtraTreesClassifier(max_depth=20, min_samples_split=2, n_estimators=200)),
+    ('SVC', SVC(C=1, kernel='linear', probability=True))
 ]
 
 # Metaclassifier para predicción del ganador
-final_model_winner = LogisticRegression(C=0.1, solver='liblinear')
+final_model_winner = LogisticRegression()
 
 # Stacking ensemble para GANADOR
 stacking_winner = StackingClassifier(estimators=base_models_winner, final_estimator=final_model_winner, cv=3)
@@ -872,19 +875,27 @@ stacking_winner = StackingClassifier(estimators=base_models_winner, final_estima
 # Entrenar el modelo para predicción del ganador
 stacking_winner.fit(X_train, y_train_winner)
 
+# Predicción y evaluación para GANADOR
+y_pred_winner = stacking_winner.predict(X_test)
+y_pred_proba_winner = stacking_winner.predict_proba(X_test)
+accuracy_winner = accuracy_score(y_test_winner, y_pred_winner)
+
 
 
 # **Modelos y parámetros para predicción del MÉTODO**
 base_models_method = [
-    ('xgb', XGBClassifier(learning_rate=0.01, max_depth=5, n_estimators=200)),
-    ('lgbm', LGBMClassifier(learning_rate=0.1, max_depth=7, n_estimators=100)),
-    ('catboost', CatBoostClassifier(verbose=0, depth=5, iterations=200, learning_rate=0.1)),
-    ('rf', RandomForestClassifier(max_depth=20, min_samples_split=2, n_estimators=100)),
-    ('gb', GradientBoostingClassifier(learning_rate=0.01, max_depth=5, n_estimators=200))
+    ('XGBoost', XGBClassifier(learning_rate=0.1, max_depth=7, n_estimators=100)),
+    ('LightGBM', LGBMClassifier(learning_rate=0.1, max_depth=5, n_estimators=100)),
+    ('CatBoost', CatBoostClassifier(depth=3, iterations=200, learning_rate=0.1)),
+    ('RandomForest', RandomForestClassifier(max_depth=20, min_samples_split=2, n_estimators=200)),
+    ('GradientBoosting', GradientBoostingClassifier(learning_rate=0.1, max_depth=5, n_estimators=100)),
+    ('LogisticRegression', LogisticRegression(C=10, solver='liblinear',max_iter=500 )),
+    ('SVC', SVC(C=10, kernel='linear', probability=True)),
+    ('ExtraTrees', ExtraTreesClassifier(max_depth=20, min_samples_split=5, n_estimators=200))
 ]
 
 # Metaclassifier para predicción del método
-final_model_method = LogisticRegression(C=10, solver='liblinear')
+final_model_method = LogisticRegression()
 
 # Stacking ensemble para MÉTODO
 stacking_method = StackingClassifier(estimators=base_models_method, final_estimator=final_model_method, cv=3)
@@ -892,56 +903,41 @@ stacking_method = StackingClassifier(estimators=base_models_method, final_estima
 # Entrenar el modelo para predicción del método
 stacking_method.fit(X_train, y_train_method)
 
+# Predicción y evaluación para MÉTODO
+y_pred_method = stacking_method.predict(X_test)
+y_pred_proba_method = stacking_method.predict_proba(X_test)
+accuracy_method = accuracy_score(y_test_method, y_pred_method)
 
-# 1. Unir las estadísticas de fighter_1 y fighter_2 en un solo DataFrame
-def unificar_estadisticas(df):
-    filas = []
-    for _, row in df.iterrows():
-        # Crear el registro para fighter_1
-        stats_fighter_1 = row.filter(like='_figther_1').to_dict()
-        stats_fighter_1 = {key.replace('_figther_1', ''): value for key, value in stats_fighter_1.items()}
-        stats_fighter_1['fighter'] = row['Fighter_figther_1']
-        stats_fighter_1['winner'] = row['Winner_figther_1']
 
-        # Crear el registro para fighter_2
-        stats_fighter_2 = row.filter(like='_figther_2').to_dict()
-        stats_fighter_2 = {key.replace('_figther_2', ''): value for key, value in stats_fighter_2.items()}
-        stats_fighter_2['fighter'] = row['Fighter_figther_2']
-        stats_fighter_2['winner'] = row['Winner_figther_2']
-        
-        # Añadir ambas filas a la lista
-        filas.append(stats_fighter_1)
-        filas.append(stats_fighter_2)
-
-    # Convertimos la lista de filas en un DataFrame
-    unified_stats = pd.DataFrame(filas)
-    return unified_stats
-
-# 2. Calcular las estadísticas de los últimos 5 combates por peleador
 def calcular_ultimos_5_combates(df):
     datos_ultimos_5 = []
-    peleadores = df['fighter'].unique()
+    peleadores = df['Fighter'].unique()
     
     for peleador in peleadores:
-        peleas_peleador = df[df['fighter'] == peleador]
+        peleas_peleador = df[df['Fighter'] == peleador]
         ultimas_5 = peleas_peleador.head(5)
         
+        # Eliminar las columnas 'Winner' y 'Method' si existen
+        if 'Winner' in ultimas_5.columns:
+            ultimas_5 = ultimas_5.drop(columns=['Winner'])
+        if 'Method' in ultimas_5.columns:
+            ultimas_5 = ultimas_5.drop(columns=['Method'])
+        
         # Filtrar solo las columnas numéricas y mantener columnas relevantes como 'Rounds'
-        columnas_numericas = ultimas_5.drop(columns=['winner','Winner','form_last_5']).select_dtypes(include=[np.number])
+        columnas_numericas = ultimas_5.select_dtypes(include=[np.number])
         promedio_estadisticas = columnas_numericas.mean()
 
         # Añadir el nombre del peleador para que no se pierda
-        promedio_estadisticas['fighter'] = peleador
+        promedio_estadisticas['Fighter'] = peleador
         datos_ultimos_5.append(promedio_estadisticas)
     
     return pd.DataFrame(datos_ultimos_5)
 
-# Ejemplo de uso
-# Unificar estadísticas de fighter_1 y fighter_2
-df_unificado = unificar_estadisticas(fight_stats_winsorized)
-
 # Calcular las estadísticas de los últimos 5 combates por peleador
-df_estadisticas_ultimos_5 = calcular_ultimos_5_combates(df_unificado)
+df_estadisticas_ultimos_5 = calcular_ultimos_5_combates(fight_stats)
+
+# Mostrar el DataFrame con las estadísticas de los últimos 5 combates
+print(df_estadisticas_ultimos_5)
 
 
 # Definir rutas relativas
