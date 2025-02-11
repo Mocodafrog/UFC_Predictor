@@ -940,33 +940,43 @@ df_estadisticas_ultimos_5 = calcular_ultimos_5_combates(fight_stats)
 print(df_estadisticas_ultimos_5)
 
 
-# Definir rutas relativas
-DATA_DIR = os.path.join(os.getcwd(), 'data')
-MODELS_DIR = os.path.join(os.getcwd(), 'models')
+# Definir rutas absolutas
+DATA_DIR = os.path.abspath('data')
+MODELS_DIR = os.path.abspath('models')
 
 # Crear los directorios si no existen
-if not os.path.exists(DATA_DIR):
-    os.makedirs(DATA_DIR, exist_ok=True)
-
-if not os.path.exists(MODELS_DIR):
-    os.makedirs(MODELS_DIR, exist_ok=True)
-
-
+os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(MODELS_DIR, exist_ok=True)
 
 # Guardar las columnas del DataFrame X en 'data/columnas_X.csv'
 columnas_X = X.columns  # Aquí usas las columnas de tu DataFrame de características X
 columnas_X_path = os.path.join(DATA_DIR, 'columnas_X.csv')
-pd.DataFrame(columnas_X).to_csv(columnas_X_path, index=False, header=False)
+try:
+    pd.DataFrame(columnas_X).to_csv(columnas_X_path, index=False, header=False)
+    print(f"Archivo guardado en: {columnas_X_path}")
+except Exception as e:
+    print(f"Error al guardar columnas_X: {e}")
 
 # Guardar el modelo de ganador en 'models/stacking_winner.pkl'
 stacking_winner_path = os.path.join(MODELS_DIR, 'stacking_winner.pkl')
-joblib.dump(stacking_winner, stacking_winner_path)
+try:
+    joblib.dump(stacking_winner, stacking_winner_path)
+    print(f"Modelo guardado en: {stacking_winner_path}")
+except Exception as e:
+    print(f"Error al guardar stacking_winner: {e}")
 
 # Guardar el modelo de método de pelea en 'models/stacking_method.pkl'
 stacking_method_path = os.path.join(MODELS_DIR, 'stacking_method.pkl')
-joblib.dump(stacking_method, stacking_method_path)
+try:
+    joblib.dump(stacking_method, stacking_method_path)
+    print(f"Modelo guardado en: {stacking_method_path}")
+except Exception as e:
+    print(f"Error al guardar stacking_method: {e}")
 
 # Guardar las estadísticas de los últimos 5 combates en 'data/df_estadisticas_ultimos_5.csv'
 estadisticas_path = os.path.join(DATA_DIR, 'df_estadisticas_ultimos_5.csv')
-df_estadisticas_ultimos_5.to_csv(estadisticas_path, index=False)
-
+try:
+    df_estadisticas_ultimos_5.to_csv(estadisticas_path, index=False)
+    print(f"Estadísticas guardadas en: {estadisticas_path}")
+except Exception as e:
+    print(f"Error al guardar estadísticas: {e}")
