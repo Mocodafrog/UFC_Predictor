@@ -1,100 +1,51 @@
 Weight Class
 Format
-KD_figther_1
-Sub. Att_figther_1
-Reversal_figther_1
-Rounds_figther_1
-form_last_5_figther_1
-landed_sig. str._figther_1
-atmp_sig. str._figther_1
-landed_total str._figther_1
-atmp_total str._figther_1
-landed_td_figther_1
-atmp_td_figther_1
-landed_head_figther_1
-atmp_head_figther_1
-landed_body_figther_1
-atmp_body_figther_1
-landed_leg_figther_1
-atmp_leg_figther_1
-landed_distance_figther_1
-atmp_distance_figther_1
-landed_clinch_figther_1
-atmp_clinch_figther_1
-landed_ground_figther_1
-atmp_ground_figther_1
-Control Time Sec_figther_1
-Total_fight_length_sec_figther_1
-Sig_Str_Acc_figther_1
-Sig_Str_LpM_figther_1
-Total_Str_Acc_figther_1
-Total_Str_LpM_figther_1
-Head_Str_Acc_figther_1
-Head_Str_LpM_figther_1
-Body_Str_Acc_figther_1
-Body_Str_LpM_figther_1
-Leg_Str_Acc_figther_1
-Leg_Str_LpM_figther_1
-Distance_Str_Acc_figther_1
-Distance_Str_LpM_figther_1
-Clinch_Str_Acc_figther_1
-Clinch_Str_LpM_figther_1
-Ground_Str_Acc_figther_1
-Ground_Str_LpM_figther_1
-TD_Avg._figther_1
-TD_Acc._figther_1
-TD_Def._figther_1
-Control_Ratio_figther_1
-height_cm_figther_1
-reach_cm_figther_1
-stance_figther_1
-age_at_fight_days_figther_1
-KD_figther_2
-Sub. Att_figther_2
-Reversal_figther_2
-Rounds_figther_2
-form_last_5_figther_2
-landed_sig. str._figther_2
-atmp_sig. str._figther_2
-landed_total str._figther_2
-atmp_total str._figther_2
-landed_td_figther_2
-atmp_td_figther_2
-landed_head_figther_2
-atmp_head_figther_2
-landed_body_figther_2
-atmp_body_figther_2
-landed_leg_figther_2
-atmp_leg_figther_2
-landed_distance_figther_2
-atmp_distance_figther_2
-landed_clinch_figther_2
-atmp_clinch_figther_2
-landed_ground_figther_2
-atmp_ground_figther_2
-Control Time Sec_figther_2
-Total_fight_length_sec_figther_2
-Sig_Str_Acc_figther_2
-Sig_Str_LpM_figther_2
-Total_Str_Acc_figther_2
-Total_Str_LpM_figther_2
-Head_Str_Acc_figther_2
-Head_Str_LpM_figther_2
-Body_Str_Acc_figther_2
-Body_Str_LpM_figther_2
-Leg_Str_Acc_figther_2
-Leg_Str_LpM_figther_2
-Distance_Str_Acc_figther_2
-Distance_Str_LpM_figther_2
-Clinch_Str_Acc_figther_2
-Clinch_Str_LpM_figther_2
-Ground_Str_Acc_figther_2
-Ground_Str_LpM_figther_2
-TD_Avg._figther_2
-TD_Acc._figther_2
-TD_Def._figther_2
-Control_Ratio_figther_2
-height_cm_figther_2
-reach_cm_figther_2
-stance_figther_2
-age_at_fight_days_figther_2
+KD
+Sub. Att
+Reversal
+Rounds
+form_last_5
+landed_sig. str.
+atmp_sig. str.
+landed_total str.
+atmp_total str.
+landed_td
+atmp_td
+landed_head
+atmp_head
+landed_body
+atmp_body
+landed_leg
+atmp_leg
+landed_distance
+atmp_distance
+landed_clinch
+atmp_clinch
+landed_ground
+atmp_ground
+Control Time Sec
+Total_fight_length_sec
+Sig_Str_Acc
+Sig_Str_LpM
+Total_Str_Acc
+Total_Str_LpM
+Head_Str_Acc
+Head_Str_LpM
+Body_Str_Acc
+Body_Str_LpM
+Leg_Str_Acc
+Leg_Str_LpM
+Distance_Str_Acc
+Distance_Str_LpM
+Clinch_Str_Acc
+Clinch_Str_LpM
+Ground_Str_Acc
+Ground_Str_LpM
+TD_Avg.
+TD_Acc.
+TD_Def.
+Control_Ratio
+height_cm
+reach_cm
+stance
+age_at_fight_days
