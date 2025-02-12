@@ -806,8 +806,6 @@ def calcular_ultimos_5_combates(df):
 # Calcular las estadísticas de los últimos 5 combates por peleador
 df_estadisticas_ultimos_5 = calcular_ultimos_5_combates(fight_stats)
 
-# Mostrar el DataFrame con las estadísticas de los últimos 5 combates
-print(df_estadisticas_ultimos_5)
 
 
 # Definir rutas absolutas
