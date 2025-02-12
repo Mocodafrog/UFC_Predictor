@@ -812,9 +812,11 @@ print(df_estadisticas_ultimos_5)
 
 # Definir rutas absolutas
 DATA_DIR = os.path.abspath('data')
+MODELS_DIR = os.path.abspath('models')
 
 # Crear los directorios si no existen
 os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(MODELS_DIR, exist_ok=True)
 
 
 # Guardar las columnas del DataFrame X en 'data/columnas_X.csv'
