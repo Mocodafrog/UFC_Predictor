@@ -3,8 +3,6 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import re 
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import StandardScaler
 import numpy as np
 from scipy.stats import mstats
 import openpyxl 
