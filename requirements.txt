@@ -2,9 +2,9 @@ streamlit==1.21.0
 pandas==1.5.3
 numpy==1.24.4
 scikit-learn==1.3.2
-xgboost==1.7.5
+xgboost==2.1.0
 catboost==1.2.7
-lightgbm==3.3.5
+lightgbm==4.5.0
 beautifulsoup4==4.12.0
 requests>=2.32.0
 matplotlib==3.7.1
