@@ -1,6 +1,7 @@
 import streamlit as st
 import joblib
 import pandas as pd
+import numpy as np
 
 # Cargar los modelos entrenados
 stacking_winner = joblib.load('models/stacking_winner.pkl')
@@ -75,6 +76,10 @@ else:
     stats_fighter_1 = stats_fighter_1[columnas_X]
     stats_fighter_2 = stats_fighter_2[columnas_X]
 
+    # Asegúrate de que stats_fighter_1 y stats_fighter_2 estén en formato 2D (como una sola fila)
+    stats_fighter_1 = np.array(stats_fighter_1).reshape(1, -1)
+    stats_fighter_2 = np.array(stats_fighter_2).reshape(1, -1)
+
     # Función para hacer la predicción del ganador
     def hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2):
         # Realizar la predicción para ambos peleadores
@@ -112,3 +117,4 @@ else:
     if st.button('Hacer Predicción'):
         hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2)
         hacer_prediccion_method(stacking_method, stats_fighter_1, stats_fighter_2)
+
