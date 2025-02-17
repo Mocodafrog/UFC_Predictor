@@ -32,14 +32,14 @@ jobs:
         git config --global user.name "GitHub Actions Bot"
         git config --global user.email "actions@github.com"
 
-    - name: Comprobar cambios en modelos y datos
+    - name: Forzar commit de modelos y datos
       run: |
         git add data/ 
-        git diff --quiet && echo "No hay cambios para commitear." || git commit -m "Actualización semanal de modelos y datos"
+        git commit -m "Actualización automática de modelos y datos" --allow-empty
 
-    - name: Subir cambios al repositorio
+    - name: Forzar push al repositorio
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
         git pull --rebase origin main || echo "No hay cambios remotos."
-        git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main || echo "No hay cambios para subir."
+        git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
