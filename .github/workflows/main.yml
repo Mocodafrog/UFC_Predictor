@@ -1,8 +1,8 @@
 name: UFC Prediction Pipeline
 
 on:
-  schedule:
-    - cron: "0 7 * * 2"  # Ejecutar a las 7 AM UTC cada martes
+  #schedule:
+    #- cron: "0 7 * * 2"  # Ejecutar a las 7 AM UTC cada martes
   workflow_dispatch:  # Permite ejecutar manualmente el pipeline desde GitHub Actions
 
 jobs:
