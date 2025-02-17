@@ -76,45 +76,56 @@ else:
     stats_fighter_1 = stats_fighter_1[columnas_X]
     stats_fighter_2 = stats_fighter_2[columnas_X]
 
-    # Asegúrate de que stats_fighter_1 y stats_fighter_2 estén en formato 2D (como una sola fila)
+    # Verificación de las dimensiones de los datos antes de pasarlos al modelo
+    st.write("Dimensiones de los datos del Peleador 1:", stats_fighter_1.shape)
+    st.write("Dimensiones de los datos del Peleador 2:", stats_fighter_2.shape)
+
+    # Asegurarse de que stats_fighter_1 y stats_fighter_2 estén en formato 2D (como una sola fila)
     stats_fighter_1 = np.array(stats_fighter_1).reshape(1, -1)
     stats_fighter_2 = np.array(stats_fighter_2).reshape(1, -1)
 
     # Función para hacer la predicción del ganador
     def hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2):
-        # Realizar la predicción para ambos peleadores
-        pred_proba_fighter_1 = stacking_winner.predict_proba(stats_fighter_1)
-        pred_proba_fighter_2 = stacking_winner.predict_proba(stats_fighter_2)
+        try:
+            # Realizar la predicción para ambos peleadores
+            pred_proba_fighter_1 = stacking_winner.predict_proba(stats_fighter_1)
+            pred_proba_fighter_2 = stacking_winner.predict_proba(stats_fighter_2)
 
-        # Obtener las probabilidades de ganar para cada peleador
-        proba_fighter_1 = pred_proba_fighter_1[0][1]  # Probabilidad de que fighter_1 gane
-        proba_fighter_2 = pred_proba_fighter_2[0][1]  # Probabilidad de que fighter_2 gane
+            # Obtener las probabilidades de ganar para cada peleador
+            proba_fighter_1 = pred_proba_fighter_1[0][1]  # Probabilidad de que fighter_1 gane
+            proba_fighter_2 = pred_proba_fighter_2[0][1]  # Probabilidad de que fighter_2 gane
 
-        # Normalizar las probabilidades para que sumen 100%
-        total = proba_fighter_1 + proba_fighter_2
-        proba_fighter_1_normalized = (proba_fighter_1 / total) * 100
-        proba_fighter_2_normalized = (proba_fighter_2 / total) * 100
+            # Normalizar las probabilidades para que sumen 100%
+            total = proba_fighter_1 + proba_fighter_2
+            proba_fighter_1_normalized = (proba_fighter_1 / total) * 100
+            proba_fighter_2_normalized = (proba_fighter_2 / total) * 100
 
-        st.write("\n--- Resultados de la Predicción del Ganador ---")
-        st.write(f"{fighter_1}: {proba_fighter_1_normalized:.2f}%")
-        st.write(f"{fighter_2}: {proba_fighter_2_normalized:.2f}%")
-        st.write(f"Predicción del ganador: {fighter_1 if proba_fighter_1_normalized > proba_fighter_2_normalized else fighter_2}")
+            st.write("\n--- Resultados de la Predicción del Ganador ---")
+            st.write(f"{fighter_1}: {proba_fighter_1_normalized:.2f}%")
+            st.write(f"{fighter_2}: {proba_fighter_2_normalized:.2f}%")
+            st.write(f"Predicción del ganador: {fighter_1 if proba_fighter_1_normalized > proba_fighter_2_normalized else fighter_2}")
+
+        except Exception as e:
+            st.error(f"Error al hacer la predicción: {str(e)}")
 
     # Función para hacer la predicción del método de pelea
     def hacer_prediccion_method(stacking_method, stats_fighter_1, stats_fighter_2):
-        # Realizar la predicción para ambos peleadores
-        pred_method_fighter_1 = stacking_method.predict(stats_fighter_1)
-        pred_method_fighter_2 = stacking_method.predict(stats_fighter_2)
+        try:
+            # Realizar la predicción para ambos peleadores
+            pred_method_fighter_1 = stacking_method.predict(stats_fighter_1)
+            pred_method_fighter_2 = stacking_method.predict(stats_fighter_2)
 
-        # Mapear los métodos
-        method_mapping = {0: 'Decision', 1: 'KO/TKO', 2: 'Submission'}
+            # Mapear los métodos
+            method_mapping = {0: 'Decision', 1: 'KO/TKO', 2: 'Submission'}
 
-        st.write("\n--- Resultados de la Predicción del Método de Pelea ---")
-        st.write(f"Método predicho para {fighter_1}: {method_mapping[pred_method_fighter_1[0]]}")
-        st.write(f"Método predicho para {fighter_2}: {method_mapping[pred_method_fighter_2[0]]}")
+            st.write("\n--- Resultados de la Predicción del Método de Pelea ---")
+            st.write(f"Método predicho para {fighter_1}: {method_mapping[pred_method_fighter_1[0]]}")
+            st.write(f"Método predicho para {fighter_2}: {method_mapping[pred_method_fighter_2[0]]}")
+
+        except Exception as e:
+            st.error(f"Error al hacer la predicción del método: {str(e)}")
 
     # Botón para hacer la predicción
     if st.button('Hacer Predicción'):
         hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2)
         hacer_prediccion_method(stacking_method, stats_fighter_1, stats_fighter_2)
-
