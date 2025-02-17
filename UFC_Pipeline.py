@@ -6,6 +6,7 @@ import re
 import numpy as np
 from scipy.stats import mstats
 import openpyxl 
+from sklearn.preprocessing import LabelEncoder
 
 import os
 
