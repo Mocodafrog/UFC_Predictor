@@ -806,6 +806,7 @@ def calcular_ultimos_5_combates(df):
 df_estadisticas_ultimos_5 = calcular_ultimos_5_combates(fight_stats)
 
 
+X = fight_stats.drop(columns=['Winner', 'Method', 'Event', 'Fight', 'Fighter'])
 
 # Definir rutas absolutas
 DATA_DIR = os.path.abspath('data')
