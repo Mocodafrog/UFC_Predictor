@@ -10,7 +10,7 @@ stacking_method = joblib.load('models/stacking_method.pkl')
 df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
 
 # Asegurarse de que las columnas del modelo se carguen correctamente
-columnas_X = pd.read_csv('columnas_X.csv', header=None).squeeze().tolist()
+columnas_X = pd.read_csv('data/columnas_X.csv', header=None).squeeze().tolist()
 
 # Título de la app
 st.title('Predicción de Resultados de Peleas de UFC')
