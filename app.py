@@ -1,7 +1,6 @@
 import streamlit as st
 import joblib
 import pandas as pd
-import numpy as np
 
 # Cargar los modelos entrenados
 stacking_winner = joblib.load('models/stacking_winner.pkl')
@@ -49,6 +48,7 @@ form_mapping = {
     "WWL": 49, "WWLL": 50, "WWLLL": 51, "WWLLW": 52, "WWLW": 53, "WWLWL": 54, "WWLWW": 55,
     "WWW": 56, "WWWL": 57, "WWWLL": 58, "WWWLW": 59, "WWWW": 60, "WWWWL": 61, "WWWWW": 62
 }
+
 # Forma actual de los peleadores (con clave única)
 form_fighter_1 = st.selectbox(f'Introduce la forma de {fighter_1}:', list(form_mapping.keys()), key='form_fighter_1')
 form_fighter_2 = st.selectbox(f'Introduce la forma de {fighter_2}:', list(form_mapping.keys()), key='form_fighter_2')
@@ -76,37 +76,36 @@ else:
     stats_fighter_1 = stats_fighter_1[columnas_X]
     stats_fighter_2 = stats_fighter_2[columnas_X]
 
-    # Verificación de las dimensiones de los datos antes de pasarlos al modelo
-    st.write("Dimensiones de los datos del Peleador 1:", stats_fighter_1.shape)
-    st.write("Dimensiones de los datos del Peleador 2:", stats_fighter_2.shape)
-
-    # Asegurarse de que stats_fighter_1 y stats_fighter_2 estén en formato 2D (como una sola fila)
-    stats_fighter_1 = np.array(stats_fighter_1).reshape(1, -1)
-    stats_fighter_2 = np.array(stats_fighter_2).reshape(1, -1)
+    # Asegúrate de que las dimensiones estén correctas (1, 51)
+    stats_fighter_1 = stats_fighter_1.values.reshape(1, -1)
+    stats_fighter_2 = stats_fighter_2.values.reshape(1, -1)
 
     # Función para hacer la predicción del ganador
     def hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2):
-        try:
-            # Realizar la predicción para ambos peleadores
-            pred_proba_fighter_1 = stacking_winner.predict_proba(stats_fighter_1)
-            pred_proba_fighter_2 = stacking_winner.predict_proba(stats_fighter_2)
+        # Comprobamos si el modelo tiene predict_proba
+        if hasattr(stacking_winner, "predict_proba"):
+            try:
+                # Realizar la predicción de probabilidades
+                pred_proba_fighter_1 = stacking_winner.predict_proba(stats_fighter_1)
+                pred_proba_fighter_2 = stacking_winner.predict_proba(stats_fighter_2)
 
-            # Obtener las probabilidades de ganar para cada peleador
-            proba_fighter_1 = pred_proba_fighter_1[0][1]  # Probabilidad de que fighter_1 gane
-            proba_fighter_2 = pred_proba_fighter_2[0][1]  # Probabilidad de que fighter_2 gane
+                # Obtener las probabilidades de ganar
+                proba_fighter_1 = pred_proba_fighter_1[0][1]  # Probabilidad de que fighter_1 gane
+                proba_fighter_2 = pred_proba_fighter_2[0][1]  # Probabilidad de que fighter_2 gane
 
-            # Normalizar las probabilidades para que sumen 100%
-            total = proba_fighter_1 + proba_fighter_2
-            proba_fighter_1_normalized = (proba_fighter_1 / total) * 100
-            proba_fighter_2_normalized = (proba_fighter_2 / total) * 100
+                # Normalizar las probabilidades para que sumen 100%
+                total = proba_fighter_1 + proba_fighter_2
+                proba_fighter_1_normalized = (proba_fighter_1 / total) * 100
+                proba_fighter_2_normalized = (proba_fighter_2 / total) * 100
 
-            st.write("\n--- Resultados de la Predicción del Ganador ---")
-            st.write(f"{fighter_1}: {proba_fighter_1_normalized:.2f}%")
-            st.write(f"{fighter_2}: {proba_fighter_2_normalized:.2f}%")
-            st.write(f"Predicción del ganador: {fighter_1 if proba_fighter_1_normalized > proba_fighter_2_normalized else fighter_2}")
-
-        except Exception as e:
-            st.error(f"Error al hacer la predicción: {str(e)}")
+                st.write("\n--- Resultados de la Predicción del Ganador ---")
+                st.write(f"{fighter_1}: {proba_fighter_1_normalized:.2f}%")
+                st.write(f"{fighter_2}: {proba_fighter_2_normalized:.2f}%")
+                st.write(f"Predicción del ganador: {fighter_1 if proba_fighter_1_normalized > proba_fighter_2_normalized else fighter_2}")
+            except Exception as e:
+                st.error(f"Error al hacer la predicción: {e}")
+        else:
+            st.error("El modelo no soporta la predicción de probabilidades.")
 
     # Función para hacer la predicción del método de pelea
     def hacer_prediccion_method(stacking_method, stats_fighter_1, stats_fighter_2):
@@ -121,11 +120,9 @@ else:
             st.write("\n--- Resultados de la Predicción del Método de Pelea ---")
             st.write(f"Método predicho para {fighter_1}: {method_mapping[pred_method_fighter_1[0]]}")
             st.write(f"Método predicho para {fighter_2}: {method_mapping[pred_method_fighter_2[0]]}")
-
         except Exception as e:
-            st.error(f"Error al hacer la predicción del método: {str(e)}")
+            st.error(f"Error al hacer la predicción del método: {e}")
 
-    # Botón para hacer la predicción
-    if st.button('Hacer Predicción'):
-        hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2)
-        hacer_prediccion_method(stacking_method, stats_fighter_1, stats_fighter_2)
+    # Realizamos las predicciones
+    hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2)
+    hacer_prediccion_method(stacking_method, stats_fighter_1, stats_fighter_2)
