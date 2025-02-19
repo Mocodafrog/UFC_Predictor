@@ -7,20 +7,20 @@ import os
 db_user = os.getenv('DB_USER')  # Usuario de la base de datos
 db_password = os.getenv('DB_PASSWORD')  # Contraseña
 db_host = os.getenv('DB_HOST')  # Host del servidor
-db_port = os.getenv('DB_PORT')  # Puerto de conexión (10047)
+db_port = os.getenv('DB_PORT')  # Puerto de conexión 
 db_name = os.getenv('DB_NAME')  # Nombre de la base de datos
 
 # 2️⃣ Verificar que las variables de entorno estén configuradas
 if not all([db_user, db_password, db_host, db_port, db_name]):
     raise ValueError("❌ ERROR: Faltan variables de entorno. Configúralas antes de ejecutar el script.")
 
-# 3️⃣ Crear cadena de conexión a SQL Server
+# 3️⃣ Crear cadena de conexión a SQL Server con pyodbc
 connection_string = (
     f"mssql+pyodbc://{db_user}:{db_password}@{db_host},{db_port}/{db_name}"
     "?driver=ODBC+Driver+17+for+SQL+Server"
 )
 
-# 4️⃣ Conectar con la base de datos
+# 4️⃣ Intentar conectar con la base de datos
 try:
     engine = sqlalchemy.create_engine(connection_string)
     conn = engine.connect()
@@ -29,7 +29,7 @@ except Exception as e:
     print(f"❌ Error de conexión a SQL Server: {e}")
     exit()
 
-# 5️⃣ Cargar los datos del CSV
+# 5️⃣ Cargar el archivo CSV
 try:
     df = pd.read_csv('data/fight_stats.csv')
     print(f"📊 CSV cargado con {df.shape[0]} filas y {df.shape[1]} columnas.")
