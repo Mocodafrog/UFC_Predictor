@@ -1,16 +1,15 @@
 import pyodbc
 import os
 
-# 1️⃣ Cargar credenciales desde variables de entorno
-server = os.getenv('DB_HOST')  # Host de Amazon RDS
-database = os.getenv('DB_NAME')  # Base de datos (asegúrate de que existe)
-username = os.getenv('DB_USER')  # Usuario
+# Cargar credenciales desde variables de entorno
+server = os.getenv('DB_HOST')  # Endpoint de Amazon RDS
+database = os.getenv('DB_NAME')  # Nombre de la base de datos en SQL Server
+username = os.getenv('DB_USER')  # Usuario de SQL Server
 password = os.getenv('DB_PASSWORD')  # Contraseña
 
-# 2️⃣ Cadena de conexión
+# Cadena de conexión para SQL Server
 conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}"
 
-# 3️⃣ Intentar la conexión
 try:
     conn = pyodbc.connect(conn_str)
     print("✅ Conexión exitosa a SQL Server en Amazon RDS.")
