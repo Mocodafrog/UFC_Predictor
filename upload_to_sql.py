@@ -1,18 +1,36 @@
-import pyodbc
 import os
+import pandas as pd
+import pyodbc
 
-# Cargar credenciales desde variables de entorno
-server = os.getenv('DB_HOST')  # Endpoint de Amazon RDS
-database = os.getenv('DB_NAME')  # Nombre de la base de datos en SQL Server
-username = os.getenv('DB_USER')  # Usuario de SQL Server
-password = os.getenv('DB_PASSWORD')  # Contraseña
+# 🔹 Configurar conexión a SQL Server en Amazon RDS
+conn_str = (
+    f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+    f"SERVER={os.getenv('DB_SERVER')};"
+    f"DATABASE={os.getenv('DB_NAME')};"
+    f"UID={os.getenv('DB_USER')};"
+    f"PWD={os.getenv('DB_PASSWORD')}"
+)
 
-# Cadena de conexión para SQL Server
-conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}"
+# 🔹 Leer el CSV
 
-try:
-    conn = pyodbc.connect(conn_str)
-    print("✅ Conexión exitosa a SQL Server en Amazon RDS.")
-    conn.close()
-except Exception as e:
-    print(f"❌ Error de conexión: {e}")
+df = pd.read_csv(data/fight_stats.csv)
+
+# 🔹 Conectar a la base de datos
+conn = pyodbc.connect(conn_str)
+cursor = conn.cursor()
+
+# 🔹 Obtener nombres de columnas automáticamente
+columns = df.columns.tolist()
+placeholders = ', '.join(['?' for _ in columns])
+query = f"INSERT INTO fight_stats ({', '.join(columns)}) VALUES ({placeholders})"
+
+# 🔹 Insertar datos en la tabla
+for _, row in df.iterrows():
+    cursor.execute(query, tuple(row))
+
+conn.commit()
+cursor.close()
+conn.close()
+
+print("✅ Datos cargados exitosamente en SQL Server RDS.")
+
