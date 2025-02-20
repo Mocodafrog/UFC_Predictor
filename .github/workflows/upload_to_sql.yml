@@ -1,9 +1,8 @@
 name: Upload UFC Data to SQL Server
 
-# Ejecutar esta acción después de que el pipeline de predicción haya terminado
 on:
   workflow_run:
-    workflows: ["UFC Prediction Pipeline"]  # Nombre del workflow del pipeline
+    workflows: ["UFC Prediction Pipeline"]  
     types:
       - completed
 
@@ -25,11 +24,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install pandas pyodbc
 
+    - name: Debug Environment Variables
+      run: |
+        set -x  # Habilita debug
+        echo "DB_SERVER=${{ secrets.DB_SERVER }}"
+        echo "DB_NAME=${{ secrets.DB_NAME }}"
+        echo "DB_USER=${{ secrets.DB_USER }}"
+        echo "CSV File exists:"
+        ls -l data/
+
     - name: Load CSV to SQL Server
       env:
-        DB_SERVER: ${{ secrets.DB_SERVER }}  # Endpoint de tu instancia RDS
-        DB_NAME: ${{ secrets.DB_NAME }}      # Nombre de la base de datos
-        DB_USER: ${{ secrets.DB_USER }}      # Usuario de la base de datos
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}  # Contraseña de la base de datos
+        DB_SERVER: ${{ secrets.DB_SERVER }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       run: |
-        python upload_to_sql.py data/fight_stats.csv ufc
+        python upload_to_sql.py "data/fight_stats.csv" "fight_stats"
