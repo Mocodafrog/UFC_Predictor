@@ -1,8 +1,8 @@
-name: Upload UFC Data to SQL Server
+name: Upload UFC Data to MySQL
 
 on:
   workflow_run:
-    workflows: ["UFC Prediction Pipeline"]  
+    workflows: ["UFC Prediction Pipeline"]
     types:
       - completed
 
@@ -22,18 +22,16 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pandas pyodbc
+        pip install pandas pymysql
 
     - name: Debug Environment Variables
       run: |
-        set -x  # Habilita debug
         echo "DB_SERVER=${{ secrets.DB_SERVER }}"
         echo "DB_NAME=${{ secrets.DB_NAME }}"
         echo "DB_USER=${{ secrets.DB_USER }}"
-        echo "CSV File exists:"
         ls -l data/
 
-    - name: Load CSV to SQL Server
+    - name: Load CSV to MySQL
       env:
         DB_SERVER: ${{ secrets.DB_SERVER }}
         DB_NAME: ${{ secrets.DB_NAME }}
