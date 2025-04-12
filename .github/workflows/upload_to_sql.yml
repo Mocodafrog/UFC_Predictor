@@ -1,6 +1,7 @@
 name: Upload UFC Data to MySQL
 
 on:
+  workflow_dispatch:  # Permite correrlo manualmente desde GitHub Actions
   workflow_run:
     workflows: ["UFC Prediction Pipeline"]
     types:
