@@ -1,0 +1,51 @@
+Weight Class
+Format
+KD
+Sub. Att
+Reversal
+Rounds
+form_last_5
+landed_sig. str.
+atmp_sig. str.
+landed_total str.
+atmp_total str.
+landed_td
+atmp_td
+landed_head
+atmp_head
+landed_body
+atmp_body
+landed_leg
+atmp_leg
+landed_distance
+atmp_distance
+landed_clinch
+atmp_clinch
+landed_ground
+atmp_ground
+Control Time Sec
+Total_fight_length_sec
+Sig_Str_Acc
+Sig_Str_LpM
+Total_Str_Acc
+Total_Str_LpM
+Head_Str_Acc
+Head_Str_LpM
+Body_Str_Acc
+Body_Str_LpM
+Leg_Str_Acc
+Leg_Str_LpM
+Distance_Str_Acc
+Distance_Str_LpM
+Clinch_Str_Acc
+Clinch_Str_LpM
+Ground_Str_Acc
+Ground_Str_LpM
+TD_Avg.
+TD_Acc.
+TD_Def.
+Control_Ratio
+height_cm
+reach_cm
+stance
+age_at_fight_days
