@@ -841,3 +841,10 @@ try:
     print(f"Archivo de estadísticas actualizado en: {fight_stats_path}")
 except Exception as e:
     print(f"Error al guardar fight_stats: {e}")
+
+fight_stats_raw_path = os.path.join(DATA_DIR, 'fight_stats_raw.csv')
+try:
+    df.to_csv(fight_stats_raw_path, index=False)
+    print(f"Archivo RAW guardado en: {fight_stats_raw_path}")
+except Exception as e:
+    print(f"Error al guardar fight_stats_raw: {e}")
