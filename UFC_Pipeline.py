@@ -834,3 +834,10 @@ try:
     print(f"Estadísticas guardadas en: {estadisticas_path}")
 except Exception as e:
     print(f"Error al guardar estadísticas: {e}")
+
+fight_stats_path = os.path.join(DATA_DIR, 'fight_stats.csv')
+try:
+    fight_stats.to_csv(fight_stats_path, index=False)
+    print(f"Archivo de estadísticas actualizado en: {fight_stats_path}")
+except Exception as e:
+    print(f"Error al guardar fight_stats: {e}")
