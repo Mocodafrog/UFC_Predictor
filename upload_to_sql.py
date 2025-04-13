@@ -23,7 +23,15 @@ def insert_csv(csv_path, table_name):
     
     try:
         df = pd.read_csv(csv_path)
-        df = df.where(pd.notnull(df), None)  # ← ESTA LÍNEA SOLUCIONA EL ERROR DE NaN
+
+        # Reemplazar NaN por None
+        df = df.where(pd.notnull(df), None)
+
+        # Limpiar saltos de línea y espacios extra en columnas tipo string
+        for col in df.columns:
+            if df[col].dtype == object:
+                df[col] = df[col].apply(lambda x: x.replace('\n', ' ').strip() if isinstance(x, str) else x)
+
     except Exception as e:
         print(f" Error al leer {csv_path}: {e}")
         return
