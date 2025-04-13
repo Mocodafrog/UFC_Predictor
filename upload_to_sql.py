@@ -1,6 +1,7 @@
 import pymysql
 import os
 import pandas as pd
+import sys
 
 # Cargar credenciales desde variables de entorno
 host = os.getenv('DB_SERVER')
@@ -9,13 +10,42 @@ password = os.getenv('DB_PASSWORD')
 database = os.getenv('DB_NAME')
 port = 3306  # Puedes cambiarlo si tu RDS usa otro puerto
 
-# Leer CSV (usando la ruta desde argumentos)
-import sys
-csv_path = sys.argv[1]  # data/fight_stats.csv
-table_name = sys.argv[2]  # fight_stats
+# Leer CSV desde argumentos
+csv_path = sys.argv[1]          # data/fight_stats.csv
+table_name = sys.argv[2]        # fight_stats
 
-# Cargar el archivo CSV
-df = pd.read_csv(csv_path)
+# Segundo CSV (versión raw)
+csv_raw_path = "data/fight_stats_raw.csv"
+table_raw_name = "fight_stats_raw"
+
+def insert_csv(csv_path, table_name):
+    print(f"\n Cargando archivo: {csv_path} → tabla: {table_name}")
+    
+    # Cargar archivo
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception as e:
+        print(f" Error al leer {csv_path}: {e}")
+        return
+
+    # Insertar
+    cursor = conn.cursor()
+    columns = df.columns.tolist()
+    placeholders = ', '.join(['%s' for _ in columns])
+    column_names = ', '.join([f"`{col}`" for col in columns])
+
+    query = f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})"
+
+    try:
+        for _, row in df.iterrows():
+            cursor.execute(query, tuple(row))
+        conn.commit()
+        print(f"Datos insertados correctamente en: {table_name}")
+    except Exception as e:
+        print(f" Error al insertar en {table_name}: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
 
 # Crear conexión a MySQL
 try:
@@ -29,25 +59,11 @@ try:
     print(" Conexión exitosa a MySQL")
 except Exception as e:
     print(f" Error al conectar a MySQL: {e}")
-    exit(1)
+    sys.exit(1)
 
-# Insertar datos
-cursor = conn.cursor()
+# Insertar ambos archivos
+insert_csv(csv_path, table_name)
+insert_csv(csv_raw_path, table_raw_name)
 
-columns = df.columns.tolist()
-placeholders = ', '.join(['%s' for _ in columns])
-column_names = ', '.join([f"`{col}`" for col in columns])  # usar backticks por si hay espacios
-
-query = f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})"
-
-try:
-    for _, row in df.iterrows():
-        cursor.execute(query, tuple(row))
-    conn.commit()
-    print(" Datos insertados correctamente.")
-except Exception as e:
-    print(f" Error al insertar datos: {e}")
-    conn.rollback()
-finally:
-    cursor.close()
-    conn.close()
+# Cerrar conexión
+conn.close()
