@@ -21,13 +21,13 @@ table_raw_name = "fight_stats_raw"
 def insert_csv(csv_path, table_name):
     print(f"\n Cargando archivo: {csv_path} → tabla: {table_name}")
     
-    # Cargar archivo
     try:
         df = pd.read_csv(csv_path)
+        df = df.where(pd.notnull(df), None)  # ← ESTA LÍNEA SOLUCIONA EL ERROR DE NaN
     except Exception as e:
         print(f" Error al leer {csv_path}: {e}")
         return
-
+        
     # Insertar
     cursor = conn.cursor()
     columns = df.columns.tolist()
