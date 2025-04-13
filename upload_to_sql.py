@@ -1,42 +1,52 @@
 import pymysql
 import os
 import pandas as pd
+
+# Cargar credenciales desde variables de entorno
+host = os.getenv('DB_SERVER')
+user = os.getenv('DB_USER')
+password = os.getenv('DB_PASSWORD')
+database = os.getenv('DB_NAME')
+port = 3306  # Puedes cambiarlo si tu RDS usa otro puerto
+
+# Leer CSV (usando la ruta desde argumentos)
 import sys
+csv_path = sys.argv[1]  # data/fight_stats.csv
+table_name = sys.argv[2]  # fight_stats
 
-# Leer argumentos: CSV y tabla
-csv_path = sys.argv[1]  # por ejemplo: data/fight_stats.csv
-table_name = sys.argv[2]  # por ejemplo: fight_stats
-
-# Conexión a MySQL usando variables de entorno
-conn = pymysql.connect(
-    host=os.environ['DB_SERVER'],
-    user=os.environ['DB_USER'],
-    password=os.environ['DB_PASSWORD'],
-    database=os.environ['DB_NAME'],
-    port=3306
-)
-print("✅ Conexión exitosa a MySQL")
-
-# Cargar el CSV
+# Cargar el archivo CSV
 df = pd.read_csv(csv_path)
 
-# Limpieza de nombres de columnas para que coincidan con la tabla SQL
-df.columns = [col.strip().replace(" ", "_").replace(".", "").replace("-", "_") for col in df.columns]
+# Crear conexión a MySQL
+try:
+    conn = pymysql.connect(
+        host=host,
+        user=user,
+        password=password,
+        database=database,
+        port=port
+    )
+    print(" Conexión exitosa a MySQL")
+except Exception as e:
+    print(f" Error al conectar a MySQL: {e}")
+    exit(1)
 
-# Preparar query
+# Insertar datos
+cursor = conn.cursor()
+
 columns = df.columns.tolist()
-placeholders = ', '.join(['%s'] * len(columns))
-column_names = ', '.join([f"`{col}`" for col in columns])
+placeholders = ', '.join(['%s' for _ in columns])
+column_names = ', '.join([f"`{col}`" for col in columns])  # usar backticks por si hay espacios
+
 query = f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})"
 
-# Insertar en lote
-cursor = conn.cursor()
 try:
-    cursor.executemany(query, df.values.tolist())
+    for _, row in df.iterrows():
+        cursor.execute(query, tuple(row))
     conn.commit()
-    print(f"✅ {cursor.rowcount} filas insertadas exitosamente en `{table_name}`.")
+    print(" Datos insertados correctamente.")
 except Exception as e:
-    print(f"❌ Error al insertar datos: {e}")
+    print(f" Error al insertar datos: {e}")
     conn.rollback()
 finally:
     cursor.close()
