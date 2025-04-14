@@ -8,7 +8,7 @@ host = os.getenv('DB_SERVER')
 user = os.getenv('DB_USER')
 password = os.getenv('DB_PASSWORD')
 database = os.getenv('DB_NAME')
-port = 3306  # Puedes cambiarlo si tu RDS usa otro puerto
+port = 3306
 
 # Leer CSV desde argumentos
 csv_path = sys.argv[1]          # data/fight_stats.csv
@@ -24,31 +24,29 @@ def insert_csv(csv_path, table_name, clean_strings=False):
     try:
         df = pd.read_csv(csv_path)
 
-        # Si es el archivo raw, reemplazar NaN por None
         if clean_strings:
-            # Limpiar saltos de línea y espacios extra en columnas tipo string
+            # Limpiar saltos de línea y espacios extra
             for col in df.columns:
                 if df[col].dtype == object:
                     df[col] = df[col].apply(lambda x: x.replace('\n', ' ').strip() if isinstance(x, str) else x)
-        
-        # Reemplazar NaN por None solo en el archivo raw
+
+        # Reemplazar NaN por None (valor por valor)
         df = df.where(pd.notnull(df), None)
 
     except Exception as e:
         print(f" Error al leer {csv_path}: {e}")
         return
-        
-    # Insertar
+
     cursor = conn.cursor()
     columns = df.columns.tolist()
     placeholders = ', '.join(['%s' for _ in columns])
     column_names = ', '.join([f"`{col}`" for col in columns])
-
     query = f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})"
 
     try:
         for _, row in df.iterrows():
-            cursor.execute(query, tuple(row))
+            values = [None if pd.isna(val) else val for val in row]  # ← Clave: limpieza fila a fila
+            cursor.execute(query, values)
         conn.commit()
         print(f"Datos insertados correctamente en: {table_name}")
     except Exception as e:
@@ -57,7 +55,7 @@ def insert_csv(csv_path, table_name, clean_strings=False):
     finally:
         cursor.close()
 
-# Crear conexión a MySQL
+# Conexión a MySQL
 try:
     conn = pymysql.connect(
         host=host,
@@ -71,9 +69,9 @@ except Exception as e:
     print(f" Error al conectar a MySQL: {e}")
     sys.exit(1)
 
-# Insertar ambos archivos
-insert_csv(csv_path, table_name, clean_strings=False)  # Principal (sin limpiar)
-insert_csv(csv_raw_path, table_raw_name, clean_strings=True)  # Raw (con limpieza)
+# Insertar archivos
+insert_csv(csv_path, table_name, clean_strings=False)        # Archivo principal
+insert_csv(csv_raw_path, table_raw_name, clean_strings=True) # Raw con limpieza
 
 # Cerrar conexión
 conn.close()
