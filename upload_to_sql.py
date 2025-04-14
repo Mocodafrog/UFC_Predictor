@@ -44,10 +44,10 @@ def insert_csv(csv_path, table_name, clean_strings=False):
     query = f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})"
 
     try:
-        # Truncar solo si la tabla es la versión principal limpia
-        if table_name == "fight_stats":
-            cursor.execute(f"TRUNCATE TABLE {table_name}")
-            print(f" Tabla {table_name} vaciada antes de insertar.")
+        # DELETE solo si la tabla es la versión principal limpia
+    if table_name == "fight_stats":
+        cursor.execute(f"DELETE FROM {table_name}")
+        print(f" Tabla {table_name} vaciada antes de insertar (con DELETE).")
 
         for _, row in df.iterrows():
             values = [None if pd.isna(val) else val for val in row]
