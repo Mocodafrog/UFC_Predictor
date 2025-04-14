@@ -44,8 +44,10 @@ def insert_csv(csv_path, table_name, clean_strings=False):
     query = f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})"
 
     try:
-        # Vaciar la tabla antes de insertar
-        cursor.execute(f"TRUNCATE TABLE {table_name}")
+        # Truncar solo si la tabla es la versión principal limpia
+        if table_name == "fight_stats":
+            cursor.execute(f"TRUNCATE TABLE {table_name}")
+            print(f" Tabla {table_name} vaciada antes de insertar.")
 
         for _, row in df.iterrows():
             values = [None if pd.isna(val) else val for val in row]
@@ -74,8 +76,8 @@ except Exception as e:
     sys.exit(1)
 
 # Insertar archivos
-insert_csv(csv_path, table_name, clean_strings=False)        # Archivo principal
-insert_csv(csv_raw_path, table_raw_name, clean_strings=True) # Raw con limpieza
+insert_csv(csv_path, table_name, clean_strings=False)        # fight_stats limpio (se trunca)
+insert_csv(csv_raw_path, table_raw_name, clean_strings=True) # fight_stats_raw (no se trunca)
 
 # Cerrar conexión
 conn.close()
