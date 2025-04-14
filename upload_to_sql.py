@@ -8,50 +8,52 @@ host = os.getenv('DB_SERVER')
 user = os.getenv('DB_USER')
 password = os.getenv('DB_PASSWORD')
 database = os.getenv('DB_NAME')
-port = 3306  # Cambiar si tu RDS usa otro puerto
+port = 3306  # Puedes cambiarlo si tu RDS usa otro puerto
 
 # Leer CSV desde argumentos
-csv_path = sys.argv[1]          # Ej: data/fight_stats.csv
-table_name = sys.argv[2]        # Ej: fight_stats
+csv_path = sys.argv[1]          # data/fight_stats.csv
+table_name = sys.argv[2]        # fight_stats
 
-# Segundo CSV (versión raw, fija)
+# Segundo CSV (versión raw)
 csv_raw_path = "data/fight_stats_raw.csv"
 table_raw_name = "fight_stats_raw"
 
 def insert_csv(csv_path, table_name, clean_strings=False):
     print(f"\n Cargando archivo: {csv_path} → tabla: {table_name}")
-
+    
     try:
         df = pd.read_csv(csv_path)
 
+        # Si es el archivo raw, reemplazar NaN por None
         if clean_strings:
-            # Solo limpiar si se indica
+            # Limpiar saltos de línea y espacios extra en columnas tipo string
             for col in df.columns:
                 if df[col].dtype == object:
                     df[col] = df[col].apply(lambda x: x.replace('\n', ' ').strip() if isinstance(x, str) else x)
+        
+        # Reemplazar NaN por None solo en el archivo raw
+        df = df.where(pd.notnull(df), None)
 
     except Exception as e:
         print(f" Error al leer {csv_path}: {e}")
         return
+        
+    # Insertar
+    cursor = conn.cursor()
+    columns = df.columns.tolist()
+    placeholders = ', '.join(['%s' for _ in columns])
+    column_names = ', '.join([f"`{col}`" for col in columns])
+
+    query = f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})"
 
     try:
-        cursor = conn.cursor()
-        columns = df.columns.tolist()
-        placeholders = ', '.join(['%s'] * len(columns))
-        column_names = ', '.join([f"`{col}`" for col in columns])
-        query = f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})"
-
         for _, row in df.iterrows():
-            valores = [None if pd.isna(val) else val for val in row]
-            cursor.execute(query, tuple(valores))
-
+            cursor.execute(query, tuple(row))
         conn.commit()
-        print(f" Datos insertados correctamente en: {table_name}")
-
+        print(f"Datos insertados correctamente en: {table_name}")
     except Exception as e:
         print(f" Error al insertar en {table_name}: {e}")
         conn.rollback()
-
     finally:
         cursor.close()
 
@@ -69,11 +71,9 @@ except Exception as e:
     print(f" Error al conectar a MySQL: {e}")
     sys.exit(1)
 
-# Insertar principal (sin limpieza)
-insert_csv(csv_path, table_name, clean_strings=False)
-
-# Insertar raw (con limpieza de strings)
-insert_csv(csv_raw_path, table_raw_name, clean_strings=True)
+# Insertar ambos archivos
+insert_csv(csv_path, table_name, clean_strings=False)  # Principal (sin limpiar)
+insert_csv(csv_raw_path, table_raw_name, clean_strings=True)  # Raw (con limpieza)
 
 # Cerrar conexión
 conn.close()
