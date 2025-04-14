@@ -44,9 +44,13 @@ def insert_csv(csv_path, table_name, clean_strings=False):
     query = f"INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})"
 
     try:
+        # Vaciar la tabla antes de insertar
+        cursor.execute(f"TRUNCATE TABLE {table_name}")
+
         for _, row in df.iterrows():
-            values = [None if pd.isna(val) else val for val in row]  # ← Clave: limpieza fila a fila
+            values = [None if pd.isna(val) else val for val in row]
             cursor.execute(query, values)
+
         conn.commit()
         print(f"Datos insertados correctamente en: {table_name}")
     except Exception as e:
