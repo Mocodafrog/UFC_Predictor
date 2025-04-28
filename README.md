@@ -31,8 +31,7 @@ El flujo de trabajo incluye desde el web scraping de datos de peleadores y comba
 - Entrenamiento de múltiples modelos de clasificación para:
   - Predicción del ganador del combate.
   - Predicción del método de victoria.
-- Evaluación comparativa de modelos utilizando métricas de Accuracy y ROC-AUC.
-- Aplicación web interactiva que permite al usuario cargar parámetros de un combate y obtener predicciones en tiempo real.
+- Aplicación web interactiva que permite al usuario cargar parámetros de un combate y obtener predicciones.
 
 ## Demo de la Aplicación
 
