@@ -14,7 +14,6 @@ El flujo de trabajo incluye desde el web scraping de datos de peleadores y comba
 - MySQL (AWS RDS)
 - Streamlit
 - BeautifulSoup4 (Web Scraping)
-- Power BI (EDA)
 
 ## Estructura del proyecto
 
