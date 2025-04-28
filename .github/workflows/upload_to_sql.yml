@@ -39,4 +39,4 @@ jobs:
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       run: |
-        python upload_to_sql.py "data/fight_stats.csv" "fight_stats"
+        python upload_to_sql.py data/fight_stats.csv fight_stats
