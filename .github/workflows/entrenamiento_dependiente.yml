@@ -1,0 +1,33 @@
+name: Entrenamiento tras Pipeline UFC
+
+on:
+  workflow_run:
+    workflows: ["UFC Prediction Pipeline"]
+    types:
+      - completed
+
+jobs:
+  entrenamiento:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Instalar dependencias
+      run: pip install -r requirements.txt
+
+    - name: Entrenar modelos
+      run: python scripts/entrenamiento.py
+
+    - name: Guardar modelos
+      uses: EndBug/add-and-commit@v9
+      with:
+        add: 'models/*.pkl'
+        message: 'Modelos entrenados automáticamente tras pipeline'
