@@ -2,15 +2,13 @@ name: Entrenamiento tras Pipeline UFC
 
 on:
   workflow_dispatch
-  #workflow_run:
-    #workflows: ["UFC Prediction Pipeline"]  # Debe coincidir con el nombre real de tu otro workflow
-    #types:
-     # - completed
-      
+  workflow_run:
+    workflows: ["UFC Prediction Pipeline"]
+    types:
+      - completed
 
 jobs:
   entrenamiento:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
