@@ -2,7 +2,7 @@ name: Entrenamiento tras Pipeline UFC
 
 on:
   workflow_run:
-    workflows: ["UFC Prediction Pipeline"]
+    workflows: ["UFC Prediction Pipeline"]  # Debe coincidir con el nombre real de tu otro workflow
     types:
       - completed
 
@@ -20,11 +20,14 @@ jobs:
       with:
         python-version: '3.10'
 
+    - name: Mostrar estructura (debug)
+      run: ls -R
+
     - name: Instalar dependencias
       run: pip install -r requirements.txt
 
     - name: Entrenar modelos
-      run: python scripts/entrenamiento.py
+      run: python entrenamiento.py
 
     - name: Guardar modelos
       uses: EndBug/add-and-commit@v9
