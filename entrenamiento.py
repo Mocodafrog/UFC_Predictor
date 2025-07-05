@@ -27,13 +27,13 @@ y_train_winner, y_test_winner = y_winner.iloc[:split], y_winner.iloc[split:]
 y_train_method, y_test_method = y_method.iloc[:split], y_method.iloc[split:]
 
 models = {
-    'XGBoost': (XGBClassifier(), {'learning_rate': [0.01, 0.1], 'n_estimators': [100, 200]}),
-    'LightGBM': (LGBMClassifier(), {'learning_rate': [0.01, 0.1], 'n_estimators': [100, 200]}),
-    'CatBoost': (CatBoostClassifier(verbose=0), {'learning_rate': [0.01, 0.1], 'iterations': [100, 200]}),
-    'RandomForest': (RandomForestClassifier(), {'n_estimators': [100, 200]}),
-    'GradientBoosting': (GradientBoostingClassifier(), {'learning_rate': [0.01, 0.1], 'n_estimators': [100, 200]}),
-    'LogisticRegression': (LogisticRegression(max_iter=1000), {'C': [0.1, 1, 10]}),
-    'SVC': (SVC(probability=True), {'C': [0.1, 1, 10]})
+    'XGBoost': (XGBClassifier(), {'learning_rate': [0.01, 0.1], 'n_estimators': [100, 200],'max_depth': [3, 5, 7]}),
+    'LightGBM': (LGBMClassifier(), {'learning_rate': [0.01, 0.1], 'n_estimators': [100, 200],'max_depth': [3, 5, 7]}),
+    'CatBoost': (CatBoostClassifier(verbose=0), {'learning_rate': [0.01, 0.1], 'iterations': [100, 200],'iterations': [100, 200]}),
+    'RandomForest': (RandomForestClassifier(), {'n_estimators': [100, 200],'max_depth': [10, 20],'min_samples_split': [2, 5]}),
+    'GradientBoosting': (GradientBoostingClassifier(), {'learning_rate': [0.01, 0.1], 'n_estimators': [100, 200],'max_depth': [3, 5, 7]}),
+    'LogisticRegression': (LogisticRegression(max_iter=1000), {'C': [0.1, 1, 10],'solver': ['lbfgs', 'liblinear']}),
+    'SVC': (SVC(probability=True), {'C': [0.1, 1, 10],'kernel': ['linear', 'rbf']})
 }
 
 def entrenar(tipo, y_train, y_test):
@@ -41,7 +41,7 @@ def entrenar(tipo, y_train, y_test):
     print(f"\n📊 Iniciando entrenamiento para: {tipo.upper()}\n")
     for nombre, (modelo, params) in models.items():
         print(f"⚙️ GridSearch para {nombre}...")
-        grid = GridSearchCV(modelo, params, cv=3, scoring='accuracy', n_jobs=-1)
+        grid = GridSearchCV(modelo, params, cv=3, scoring='accuracy', verbose=1, n_jobs=-1)
         grid.fit(X_train, y_train)
         joblib.dump(grid.best_estimator_, os.path.join(MODELS_DIR, f"{nombre.lower()}_{tipo}.pkl"))
         mejores.append((nombre, grid.best_estimator_))
