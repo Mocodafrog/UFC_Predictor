@@ -17,8 +17,6 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 fight_stats = pd.read_csv(os.path.join(DATA_DIR, 'fight_stats.csv'))
 columnas_X = pd.read_csv(os.path.join(DATA_DIR, 'columnas_X.csv'), header=None).squeeze().tolist()
 
-fight_stats['Date'] = pd.to_datetime(fight_stats['Date'], errors='coerce')
-fight_stats = fight_stats.sort_values(by='Date').reset_index(drop=True)
 
 X = fight_stats[columnas_X]
 y_winner = fight_stats['Winner']
