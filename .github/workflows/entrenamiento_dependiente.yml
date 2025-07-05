@@ -1,7 +1,7 @@
 name: Entrenamiento tras Pipeline UFC
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
   workflow_run:
     workflows: ["UFC Prediction Pipeline"]
     types:
