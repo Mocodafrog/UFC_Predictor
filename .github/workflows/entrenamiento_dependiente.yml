@@ -1,10 +1,12 @@
 name: Entrenamiento tras Pipeline UFC
 
 on:
-  workflow_run:
-    workflows: ["UFC Prediction Pipeline"]  # Debe coincidir con el nombre real de tu otro workflow
-    types:
-      - completed
+  workflow_dispatch
+  #workflow_run:
+    #workflows: ["UFC Prediction Pipeline"]  # Debe coincidir con el nombre real de tu otro workflow
+    #types:
+     # - completed
+      
 
 jobs:
   entrenamiento:
