@@ -27,13 +27,38 @@ y_train_winner, y_test_winner = y_winner.iloc[:split], y_winner.iloc[split:]
 y_train_method, y_test_method = y_method.iloc[:split], y_method.iloc[split:]
 
 models = {
-    'XGBoost': (XGBClassifier(), {'learning_rate': [0.01, 0.1], 'n_estimators': [100, 200],'max_depth': [3, 5, 7]}),
-    'LightGBM': (LGBMClassifier(), {'learning_rate': [0.01, 0.1], 'n_estimators': [100, 200],'max_depth': [3, 5, 7]}),
-    'CatBoost': (CatBoostClassifier(verbose=0), {'learning_rate': [0.01, 0.1], 'iterations': [100, 200],'iterations': [100, 200]}),
-    'RandomForest': (RandomForestClassifier(), {'n_estimators': [100, 200],'max_depth': [10, 20],'min_samples_split': [2, 5]}),
-    'GradientBoosting': (GradientBoostingClassifier(), {'learning_rate': [0.01, 0.1], 'n_estimators': [100, 200],'max_depth': [3, 5, 7]}),
-    'LogisticRegression': (LogisticRegression(max_iter=1000), {'C': [0.1, 1, 10],'solver': ['lbfgs', 'liblinear']}),
-    'SVC': (SVC(probability=True), {'C': [0.1, 1, 10],'kernel': ['linear', 'rbf']})
+    'XGBoost': (XGBClassifier(), {
+        'learning_rate': [0.01, 0.1],
+        'n_estimators': [100, 200],
+        'max_depth': [3, 5, 7]
+    }),
+    'LightGBM': (LGBMClassifier(), {
+        'learning_rate': [0.01, 0.1],
+        'n_estimators': [100, 200],
+        'max_depth': [3, 5, 7]
+    }),
+    'CatBoost': (CatBoostClassifier(verbose=0), {
+        'learning_rate': [0.01, 0.1],
+        'iterations': [100, 200],
+        'depth': [3, 5, 7]
+    }),
+    'RandomForest': (RandomForestClassifier(), {
+        'n_estimators': [100, 200],
+        'max_depth': [10, 20],
+        'min_samples_split': [2, 5]
+    }),
+    'GradientBoosting': (GradientBoostingClassifier(), {
+        'learning_rate': [0.01, 0.1],
+        'n_estimators': [100, 200]
+    }),
+    'LogisticRegression': (LogisticRegression(max_iter=1000), {
+        'C': [0.1, 1, 10],
+        'solver': ['lbfgs', 'liblinear']
+    }),
+    'SVC': (SVC(probability=True), {
+        'C': [0.1, 1, 10],
+        'kernel': ['linear', 'rbf']
+    })
 }
 
 def entrenar(tipo, y_train, y_test):
