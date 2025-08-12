@@ -62,3 +62,20 @@ La aplicación Streamlit está disponible públicamente en el siguiente enlace:
    streamlit run app.py
    ```
 
+## 🏋️ Entrenamiento de modelos
+
+Los modelos se entrenan mediante scripts ubicados en la raíz del proyecto.
+Los artefactos generados se guardan en `models/{MODEL_VERSION}/`.
+
+Para entrenar el modelo del método de victoria:
+
+```bash
+python entrenamiento.py
+```
+
+Para entrenar el modelo del ganador del combate:
+
+```bash
+python entrenamiento_winner.py
+```
+

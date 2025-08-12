@@ -1,12 +1,11 @@
-"""Entrenamiento del modelo para predecir el método de victoria.
+"""Entrenamiento del modelo para predecir el ganador de la pelea.
 
 Este script carga las estadísticas históricas de peleas, selecciona las
 características numéricas definidas en ``columnas_X`` (métricas previas y
 atributos físicos) y entrena un modelo de stacking para predecir el
-``Method`` de una pelea. La validación se realiza de forma cronológica,
-utilizando las peleas más antiguas para entrenamiento y las más recientes
-para prueba.  Los artefactos y métricas del modelo se guardan en
-``models/{MODEL_VERSION}``.
+``Winner``. La validación se realiza de forma cronológica, utilizando las
+peleas más antiguas para entrenamiento y las más recientes para prueba.
+Los artefactos y métricas del modelo se guardan en ``models/{MODEL_VERSION}``.
 """
 
 import os
@@ -40,13 +39,13 @@ columnas_X = (
 
 # Características exclusivamente numéricas y de atributos físicos
 X = fight_stats[columnas_X]
-y_method = fight_stats["Method"]
+y_winner = fight_stats["Winner"]
 
 # Separación cronológica: primeras peleas para entrenamiento,
 # últimas peleas para prueba
 split = int(len(X) * 0.8)
 X_train, X_test = X.iloc[:split], X.iloc[split:]
-y_train_method, y_test_method = y_method.iloc[:split], y_method.iloc[split:]
+y_train_winner, y_test_winner = y_winner.iloc[:split], y_winner.iloc[split:]
 
 models = {
     "XGBoost": (
@@ -97,10 +96,10 @@ models = {
 
 
 def entrenar(y_train, y_test):
-    """Entrena modelos base y un stacking final para el método de victoria."""
+    """Entrena modelos base y un stacking final para el ganador."""
 
     mejores = []
-    print("\n📊 Iniciando entrenamiento para METHOD\n")
+    print("\n📊 Iniciando entrenamiento para WINNER\n")
     for nombre, (modelo, params) in models.items():
         print(f"⚙️ GridSearch para {nombre}...")
         grid = GridSearchCV(
@@ -109,7 +108,7 @@ def entrenar(y_train, y_test):
         grid.fit(X_train, y_train)
         joblib.dump(
             grid.best_estimator_,
-            os.path.join(MODELS_DIR, f"{nombre.lower()}_method.pkl"),
+            os.path.join(MODELS_DIR, f"{nombre.lower()}_winner.pkl"),
         )
         mejores.append((nombre, grid.best_estimator_))
         print(f"✅ {nombre} mejores parámetros: {grid.best_params_}")
@@ -122,7 +121,7 @@ def entrenar(y_train, y_test):
         n_jobs=-1,
     )
     stacking.fit(X_train, y_train)
-    joblib.dump(stacking, os.path.join(MODELS_DIR, "stacking_method.pkl"))
+    joblib.dump(stacking, os.path.join(MODELS_DIR, "stacking_winner.pkl"))
 
     y_pred = stacking.predict(X_test)
     y_proba = stacking.predict_proba(X_test)
@@ -133,17 +132,16 @@ def entrenar(y_train, y_test):
     else:
         roc_auc = roc_auc_score(y_test, y_proba, multi_class="ovr")
 
-    print("\n✅ MÉTRICAS PARA METHOD:")
+    print("\n✅ MÉTRICAS PARA WINNER:")
     print(f"Accuracy: {accuracy:.4f}")
     print(f"ROC-AUC: {roc_auc:.4f}")
     print(f"Random state: {RANDOM_STATE}\n")
 
-    with open(os.path.join(MODELS_DIR, "metrics_method.txt"), "w") as f:
+    with open(os.path.join(MODELS_DIR, "metrics_winner.txt"), "w") as f:
         f.write(f"Accuracy: {accuracy:.4f}\n")
         f.write(f"ROC-AUC: {roc_auc:.4f}\n")
         f.write(f"Random state: {RANDOM_STATE}\n")
 
 
 if __name__ == "__main__":
-    entrenar(y_train_method, y_test_method)
-
+    entrenar(y_train_winner, y_test_winner)
