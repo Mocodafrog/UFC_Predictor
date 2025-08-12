@@ -56,7 +56,11 @@ La aplicación Streamlit está disponible públicamente en el siguiente enlace:
    ```bash
    pip install -r requirements.txt
    ```
-4. Corre la aplicación Streamlit:
+4. Descarga los modelos entrenados desde los assets de GitHub (o configura `MODEL_BASE_URL` con otra ubicación) y guárdalos en `models/`:
+   ```bash
+   python download_models.py
+   ```
+5. Corre la aplicación Streamlit:
    ```bash
    cd app
    streamlit run app.py

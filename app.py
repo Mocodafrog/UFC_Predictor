@@ -1,10 +1,32 @@
 import streamlit as st
 import joblib
 import pandas as pd
+import os
+import urllib.request
+from pathlib import Path
+
+
+MODEL_BASE_URL = os.getenv(
+    "MODEL_BASE_URL",
+    "https://github.com/Mocodafrog/UFC_Predictor/releases/download/latest",
+)
+
+
+def load_model(filename: str):
+    models_dir = Path("models")
+    models_dir.mkdir(exist_ok=True)
+    model_path = models_dir / filename
+
+    if not model_path.exists():
+        url = f"{MODEL_BASE_URL}/{filename}"
+        urllib.request.urlretrieve(url, model_path)
+
+    return joblib.load(model_path)
+
 
 # Cargar los modelos entrenados
-stacking_winner = joblib.load('models/stacking_winner.pkl')
-stacking_method = joblib.load('models/stacking_method.pkl')
+stacking_winner = load_model("stacking_winner.pkl")
+stacking_method = load_model("stacking_method.pkl")
 
 # Cargar los datos preprocesados
 df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
