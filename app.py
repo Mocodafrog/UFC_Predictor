@@ -2,28 +2,46 @@ import streamlit as st
 import joblib
 import pandas as pd
 
-MODEL_VERSION = "1.0"
+MODEL_VERSION = "1.0"  # Versión del modelo utilizada para construir las rutas
 
 
 @st.cache_resource(show_spinner="Cargando modelo del ganador...")
 def load_stacking_winner(version: str):
-    return joblib.load('models/stacking_winner.pkl')
+    try:
+        return joblib.load(f"models/{version}/stacking_winner.pkl")
+    except FileNotFoundError:
+        st.error(f"No se encontró el modelo: models/{version}/stacking_winner.pkl")
+        return None
 
 
 @st.cache_resource(show_spinner="Cargando modelo del método...")
 def load_stacking_method(version: str):
-    return joblib.load('models/stacking_method.pkl')
+    try:
+        return joblib.load(f"models/{version}/stacking_method.pkl")
+    except FileNotFoundError:
+        st.error(f"No se encontró el modelo: models/{version}/stacking_method.pkl")
+        return None
 
 
 # Cargar los modelos entrenados
 stacking_winner = load_stacking_winner(MODEL_VERSION)
 stacking_method = load_stacking_method(MODEL_VERSION)
+if stacking_winner is None or stacking_method is None:
+    st.stop()
 
 # Cargar los datos preprocesados
-df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
+try:
+    df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
+except FileNotFoundError:
+    st.error("Archivo de estadísticas no encontrado: data/df_estadisticas_ultimos_5.csv")
+    st.stop()
 
 # Asegurarse de que las columnas del modelo se carguen correctamente
-columnas_X = pd.read_csv('data/columnas_X.csv', header=None).squeeze().tolist()
+try:
+    columnas_X = pd.read_csv('data/columnas_X.csv', header=None).squeeze().tolist()
+except FileNotFoundError:
+    st.error("Archivo de columnas no encontrado: data/columnas_X.csv")
+    st.stop()
 
 # Título de la app
 st.title('Predicción de Resultados de Peleas de UFC')
