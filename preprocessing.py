@@ -7,23 +7,32 @@ import pandas as pd
 def convert_height_to_cm(height: str) -> float | None:
     """Convert a height value like ``6' 2\"`` to centimeters."""
     if height and height != "--":
-        feet, inches = height.split("' ")
-        inches = inches.replace('"', '')
-        return int(feet) * 30.48 + int(inches) * 2.54
+        try:
+            feet, inches = height.split("' ")
+            inches = inches.replace('"', '')
+            return int(feet) * 30.48 + int(inches) * 2.54
+        except ValueError:
+            return None
     return None
 
 
 def convert_weight_to_kg(weight: str) -> float | None:
     """Convert a weight value like ``170 lbs."`` to kilograms."""
     if weight and weight != "--":
-        return float(weight.replace(' lbs.', '')) * 0.453592
+        try:
+            return float(weight.replace(' lbs.', '')) * 0.453592
+        except ValueError:
+            return None
     return None
 
 
 def convert_reach_to_cm(reach: str) -> float | None:
     """Convert a reach measurement in inches to centimeters."""
     if reach and reach != "--":
-        return float(reach.replace('"', '')) * 2.54
+        try:
+            return float(reach.replace('"', '')) * 2.54
+        except ValueError:
+            return None
     return None
 
 
