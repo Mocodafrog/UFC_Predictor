@@ -5,10 +5,42 @@ import time
 import re 
 import numpy as np
 from scipy.stats import mstats
-import openpyxl 
+import openpyxl
 from sklearn.preprocessing import LabelEncoder
 
 import os
+
+
+session = requests.Session()
+session.headers.update(
+    {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0 Safari/537.36"
+    }
+)
+
+
+def fetch(url, retries=3, backoff=1, timeout=10):
+    for attempt in range(retries):
+        try:
+            response = session.get(url, timeout=timeout)
+            if response.status_code == 200:
+                return response
+            if response.status_code in {429, 500, 502, 503, 504}:
+                time.sleep(backoff * (attempt + 1))
+            else:
+                print(f"Request failed for {url} with status {response.status_code}")
+                return None
+        except requests.RequestException as e:
+            if attempt == retries - 1:
+                print(f"Error fetching {url}: {e}")
+            else:
+                time.sleep(backoff * (attempt + 1))
+    return None
+
+
+def fetch_soup(url, retries=3, backoff=1, timeout=10):
+    response = fetch(url, retries=retries, backoff=backoff, timeout=timeout)
+    return BeautifulSoup(response.content, 'html.parser') if response else None
 
 
 
@@ -29,9 +61,9 @@ for char in 'abcdefghijklmnopqrstuvwxyz':
     # URL de la página de peleadores para cada letra
     url = f"http://ufcstats.com/statistics/fighters?char={char}&page=all"
     
-    # Realizar la solicitud a la página
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
+    soup = fetch_soup(url)
+    if not soup:
+        continue
     
     # Seleccionar la tabla con los datos de los peleadores
     table = soup.select_one('table')
@@ -48,8 +80,9 @@ for char in 'abcdefghijklmnopqrstuvwxyz':
                 fighter_profile_url = last_name_column['href']
                 
                 # Hacer una solicitud a la página del perfil del peleador
-                profile_response = requests.get(fighter_profile_url)
-                profile_soup = BeautifulSoup(profile_response.content, 'html.parser')
+                profile_soup = fetch_soup(fighter_profile_url)
+                if not profile_soup:
+                    continue
                 
                 # Extraer el nombre completo desde el perfil
                 full_name_tag = profile_soup.select_one('span.b-content__title-highlight')
@@ -89,8 +122,7 @@ fighters_df = pd.DataFrame({
 
 # URL de la página de eventos completados
 base_url = "http://ufcstats.com/statistics/events/completed?page=all"
-response = requests.get(base_url)
-soup = BeautifulSoup(response.content, 'html.parser')
+soup = fetch_soup(base_url)
 
 # Listas para almacenar datos
 event_names = []
@@ -100,12 +132,13 @@ winner_flags = []
 stats = []  # Lista para almacenar todas las estadísticas de las peleas
 
 # Extraer todos los enlaces de los eventos sin limitación
-event_links = [a['href'] for a in soup.select('a.b-link.b-link_style_black')]
+event_links = [a['href'] for a in soup.select('a.b-link.b-link_style_black')] if soup else []
 
 # Recorrer cada evento
 for event_link in event_links:
-    event_response = requests.get(event_link)
-    soup_event = BeautifulSoup(event_response.content, 'html.parser')
+    soup_event = fetch_soup(event_link)
+    if not soup_event:
+        continue
 
     # Extraer todos los enlaces de las peleas sin limitación
     #fight_links = [a['href'] for a in soup_event.select('a.b-flag.b-flag_style_green')]
@@ -114,8 +147,9 @@ for event_link in event_links:
     for fight_link in fight_links:
         try:
             time.sleep(1)
-            fight_response = requests.get(fight_link, timeout=10)
-            soup_fight = BeautifulSoup(fight_response.content, 'html.parser')
+            soup_fight = fetch_soup(fight_link, timeout=10)
+            if not soup_fight:
+                continue
 
             # Extraer el nombre del evento
             event_name_elem = soup_fight.select_one('h2.b-content__title')
@@ -217,8 +251,7 @@ df = pd.DataFrame(stats)
 
 # URL de la página de eventos completados
 base_url = "http://ufcstats.com/statistics/events/completed?page=all"
-response = requests.get(base_url)
-soup = BeautifulSoup(response.content, 'html.parser')
+soup = fetch_soup(base_url)
 
 # Listas para almacenar los datos
 event_names = []
@@ -226,7 +259,7 @@ event_dates = []
 event_locations = []
 
 # Seleccionar la tabla de eventos
-event_table = soup.select('table.b-statistics__table-events tbody tr')
+event_table = soup.select('table.b-statistics__table-events tbody tr') if soup else []
 # Recorrer cada fila de la tabla
 for row in event_table:
     try:
@@ -254,8 +287,7 @@ events = pd.DataFrame({
 
 # URL de la página de eventos futuros
 base_url = "http://ufcstats.com/statistics/events/upcoming?page=all"
-response = requests.get(base_url)
-soup = BeautifulSoup(response.content, 'html.parser')
+soup = fetch_soup(base_url)
 
 # Listas para almacenar los datos
 event_names = []
@@ -263,7 +295,7 @@ event_dates = []
 event_locations = []
 
 # Seleccionar la tabla de eventos
-event_table = soup.select('table.b-statistics__table-events tbody tr')
+event_table = soup.select('table.b-statistics__table-events tbody tr') if soup else []
 
 # Recorrer cada fila de la tabla
 for row in event_table:
@@ -292,21 +324,21 @@ upcoming_envents = pd.DataFrame({
 
 # URL de la página de eventos futuros
 base_url = "http://ufcstats.com/statistics/events/upcoming?page=all"
-response = requests.get(base_url)
-soup = BeautifulSoup(response.content, 'html.parser')
+soup = fetch_soup(base_url)
 
 # Listas para almacenar datos
 events_data = []
 
 # Extraer los enlaces de los eventos futuros
-event_links = [a['href'] for a in soup.select('a.b-link.b-link_style_black')]
+event_links = [a['href'] for a in soup.select('a.b-link.b-link_style_black')] if soup else []
 
 # Recorrer cada evento
 for event_link in event_links:
     try:
         time.sleep(1)
-        event_response = requests.get(event_link)
-        soup_event = BeautifulSoup(event_response.content, 'html.parser')
+        soup_event = fetch_soup(event_link)
+        if not soup_event:
+            continue
 
         # Extraer el nombre del evento
         event_name_elem = soup_event.select_one('h2.b-content__title')
