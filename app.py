@@ -2,9 +2,22 @@ import streamlit as st
 import joblib
 import pandas as pd
 
+MODEL_VERSION = "1.0"
+
+
+@st.cache_resource(show_spinner="Cargando modelo del ganador...")
+def load_stacking_winner(version: str):
+    return joblib.load('models/stacking_winner.pkl')
+
+
+@st.cache_resource(show_spinner="Cargando modelo del método...")
+def load_stacking_method(version: str):
+    return joblib.load('models/stacking_method.pkl')
+
+
 # Cargar los modelos entrenados
-stacking_winner = joblib.load('models/stacking_winner.pkl')
-stacking_method = joblib.load('models/stacking_method.pkl')
+stacking_winner = load_stacking_winner(MODEL_VERSION)
+stacking_method = load_stacking_method(MODEL_VERSION)
 
 # Cargar los datos preprocesados
 df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
