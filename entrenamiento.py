@@ -18,11 +18,13 @@ from sklearn.ensemble import (
 )
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.svm import SVC
 from lightgbm import LGBMClassifier
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
+
+RANDOM_STATE = 42
 
 DATA_DIR = os.path.abspath("data")
 MODELS_DIR = os.path.abspath("models")
@@ -46,7 +48,7 @@ y_train_method, y_test_method = y_method.iloc[:split], y_method.iloc[split:]
 
 models = {
     "XGBoost": (
-        XGBClassifier(),
+        XGBClassifier(random_state=RANDOM_STATE),
         {
             "learning_rate": [0.01, 0.1],
             "n_estimators": [100, 200],
@@ -54,7 +56,7 @@ models = {
         },
     ),
     "LightGBM": (
-        LGBMClassifier(),
+        LGBMClassifier(random_state=RANDOM_STATE),
         {
             "learning_rate": [0.01, 0.1],
             "n_estimators": [100, 200],
@@ -62,11 +64,11 @@ models = {
         },
     ),
     "CatBoost": (
-        CatBoostClassifier(verbose=0),
+        CatBoostClassifier(verbose=0, random_state=RANDOM_STATE),
         {"learning_rate": [0.01, 0.1], "iterations": [100, 200]},
     ),
     "RandomForest": (
-        RandomForestClassifier(),
+        RandomForestClassifier(random_state=RANDOM_STATE),
         {
             "n_estimators": [100, 200],
             "max_depth": [10, 20],
@@ -74,7 +76,7 @@ models = {
         },
     ),
     "GradientBoosting": (
-        GradientBoostingClassifier(),
+        GradientBoostingClassifier(random_state=RANDOM_STATE),
         {
             "learning_rate": [0.01, 0.1],
             "n_estimators": [100, 200],
@@ -82,10 +84,13 @@ models = {
         },
     ),
     "LogisticRegression": (
-        LogisticRegression(max_iter=1000),
+        LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
         {"C": [0.1, 1, 10], "solver": ["lbfgs", "liblinear"]},
     ),
-    "SVC": (SVC(probability=True), {"C": [0.1, 1, 10], "kernel": ["linear", "rbf"]}),
+    "SVC": (
+        SVC(probability=True, random_state=RANDOM_STATE),
+        {"C": [0.1, 1, 10], "kernel": ["linear", "rbf"]},
+    ),
 }
 
 
@@ -107,8 +112,12 @@ def entrenar(y_train, y_test):
         mejores.append((nombre, grid.best_estimator_))
         print(f"✅ {nombre} mejores parámetros: {grid.best_params_}")
 
+    cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
     stacking = StackingClassifier(
-        estimators=mejores, final_estimator=LogisticRegression(), cv=3, n_jobs=-1
+        estimators=mejores,
+        final_estimator=LogisticRegression(random_state=RANDOM_STATE),
+        cv=cv,
+        n_jobs=-1,
     )
     stacking.fit(X_train, y_train)
     joblib.dump(stacking, os.path.join(MODELS_DIR, "stacking_method.pkl"))
@@ -124,11 +133,13 @@ def entrenar(y_train, y_test):
 
     print("\n✅ MÉTRICAS PARA METHOD:")
     print(f"Accuracy: {accuracy:.4f}")
-    print(f"ROC-AUC: {roc_auc:.4f}\n")
+    print(f"ROC-AUC: {roc_auc:.4f}")
+    print(f"Random state: {RANDOM_STATE}\n")
 
     with open(os.path.join(MODELS_DIR, "metrics_method.txt"), "w") as f:
         f.write(f"Accuracy: {accuracy:.4f}\n")
         f.write(f"ROC-AUC: {roc_auc:.4f}\n")
+        f.write(f"Random state: {RANDOM_STATE}\n")
 
 
 if __name__ == "__main__":
