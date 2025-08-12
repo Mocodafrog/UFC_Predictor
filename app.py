@@ -35,6 +35,11 @@ fighters_list = df_estadisticas_ultimos_5['Fighter'].unique()
 fighter_1 = st.selectbox('Selecciona el primer peleador:', fighters_list, key='fighter_1')
 fighter_2 = st.selectbox('Selecciona el segundo peleador:', fighters_list, key='fighter_2')
 
+# Verificar que los peleadores seleccionados sean diferentes
+duplicate_selection = fighter_1 == fighter_2
+if duplicate_selection:
+    st.warning('Debes seleccionar dos peleadores distintos.')
+
 # Selección de formato (se convierte a valor numérico según tu tabla)
 format_mapping = {'3 Rnd (5-5-5)': 0, '3 Rnd + OT (5-5-5-5)': 1, '5 Rnd (5-5-5-5-5)': 2}
 format_selection = st.selectbox('Selecciona el formato de la pelea:', list(format_mapping.keys()), key='format_selection')
@@ -122,6 +127,6 @@ else:
         st.write(f"Método predicho para {fighter_2}: {method_mapping[pred_method_fighter_2[0]]}")
 
     # Botón para hacer la predicción
-    if st.button('Hacer Predicción'):
+    if st.button('Hacer Predicción', disabled=duplicate_selection):
         hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2)
         hacer_prediccion_method(stacking_method, stats_fighter_1, stats_fighter_2)
