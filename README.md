@@ -17,10 +17,10 @@ El flujo de trabajo incluye desde el web scraping de datos de peleadores y comba
 
 ## Estructura del proyecto
 
-- `/scraping/`: Scripts de extracción de datos desde UFCStats.com
-- `/processing/`: Limpieza y preparación de los datos
-- `/modeling/`: Entrenamiento y validación de modelos predictivos
-- `/app/`: Código de la aplicación Streamlit
+- `scraping.py`: Script de extracción de datos desde UFCStats.com
+- `preprocessing.py`: Limpieza y preparación de los datos
+- `entrenamiento.py`: Entrenamiento y validación de modelos predictivos
+- `app.py`: Código de la aplicación Streamlit
 - `requirements.txt`: Librerías necesarias para ejecutar el proyecto
 - `README.md`: Este documento
 
@@ -58,7 +58,6 @@ La aplicación Streamlit está disponible públicamente en el siguiente enlace:
    ```
 4. Corre la aplicación Streamlit:
    ```bash
-   cd app
    streamlit run app.py
    ```
 
