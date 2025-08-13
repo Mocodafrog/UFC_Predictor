@@ -52,11 +52,15 @@ La aplicación Streamlit está disponible públicamente en el siguiente enlace:
    source env/bin/activate  # en Linux/macOS
    env\Scripts\activate   # en Windows
    ```
-3. Instala las dependencias:
+3. Instala las dependencias principales:
    ```bash
    pip install -r requirements.txt
    ```
-4. Corre la aplicación Streamlit:
+4. (Opcional) Instala dependencias de desarrollo como `pymysql` para `upload_to_sql.py`:
+   ```bash
+   pip install -r dev-requirements.txt
+   ```
+5. Corre la aplicación Streamlit:
    ```bash
    streamlit run app.py
    ```
