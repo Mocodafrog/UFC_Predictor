@@ -61,6 +61,17 @@ La aplicación Streamlit está disponible públicamente en el siguiente enlace:
    streamlit run app.py
    ```
 
+### Dependencias opcionales para análisis
+
+Algunas librerías se utilizan solo para análisis puntuales y no se instalan por defecto. Instálalas manualmente si las necesitas:
+
+- matplotlib
+- selenium
+- webdriver-manager
+- scipy
+- tensorflow
+- openpyxl
+
 ## 🏋️ Entrenamiento de modelos
 
 Los modelos se entrenan mediante scripts ubicados en la raíz del proyecto.
