@@ -25,6 +25,7 @@ from lightgbm import LGBMClassifier
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
 
+# Seed para asegurar reproducibilidad en todo el entrenamiento
 RANDOM_STATE = 42
 MODEL_VERSION = "1.0"
 
@@ -104,7 +105,14 @@ def entrenar(y_train, y_test):
     for nombre, (modelo, params) in models.items():
         print(f"⚙️ GridSearch para {nombre}...")
         grid = GridSearchCV(
-            modelo, params, cv=3, scoring="accuracy", verbose=1, n_jobs=-1
+            modelo,
+            params,
+            cv=StratifiedKFold(
+                n_splits=3, shuffle=True, random_state=RANDOM_STATE
+            ),
+            scoring="accuracy",
+            verbose=1,
+            n_jobs=-1,
         )
         grid.fit(X_train, y_train)
         joblib.dump(
