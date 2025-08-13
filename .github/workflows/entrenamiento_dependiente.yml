@@ -21,7 +21,7 @@ jobs:
         python-version: '3.10'
 
     - name: Mostrar estructura (debug)
-      run: ls -R
+      run: ls
 
     - name: Instalar dependencias
       run: pip install -r requirements.txt
