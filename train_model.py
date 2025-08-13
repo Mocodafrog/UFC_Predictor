@@ -98,13 +98,14 @@ def train(target_column: str) -> None:
     X_train, X_test = X.iloc[:split], X.iloc[split:]
     y_train, y_test = y.iloc[:split], y.iloc[split:]
 
+    cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
     mejores = []
     print(f"\n📊 Iniciando entrenamiento para {target_column.upper()}\n")
     target_suffix = target_column.lower()
     for nombre, (modelo, params) in models.items():
         print(f"⚙️ GridSearch para {nombre}...")
         grid = GridSearchCV(
-            modelo, params, cv=3, scoring="accuracy", verbose=1, n_jobs=-1
+            modelo, params, cv=cv, scoring="accuracy", verbose=1, n_jobs=-1
         )
         grid.fit(X_train, y_train)
         joblib.dump(
@@ -113,8 +114,6 @@ def train(target_column: str) -> None:
         )
         mejores.append((nombre, grid.best_estimator_))
         print(f"✅ {nombre} mejores parámetros: {grid.best_params_}")
-
-    cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
     stacking = StackingClassifier(
         estimators=mejores,
         final_estimator=LogisticRegression(random_state=RANDOM_STATE),
