@@ -108,8 +108,19 @@ else:
     stats_fighter_2['Weight Class'] = weight_class_input
 
     # Asegurarse de que las columnas estén en el orden correcto
-    stats_fighter_1 = stats_fighter_1[columnas_X]
-    stats_fighter_2 = stats_fighter_2[columnas_X]
+    try:
+        stats_fighter_1 = stats_fighter_1[columnas_X]
+    except KeyError:
+        missing_cols = [col for col in columnas_X if col not in stats_fighter_1.columns]
+        st.error(f"Columnas faltantes en las estadísticas de {fighter_1}: {missing_cols}")
+        st.stop()
+
+    try:
+        stats_fighter_2 = stats_fighter_2[columnas_X]
+    except KeyError:
+        missing_cols = [col for col in columnas_X if col not in stats_fighter_2.columns]
+        st.error(f"Columnas faltantes en las estadísticas de {fighter_2}: {missing_cols}")
+        st.stop()
 
     # Función para hacer la predicción del ganador
     def hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2):
