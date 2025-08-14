@@ -29,6 +29,9 @@ jobs:
     - name: Entrenar modelos
       run: python entrenamiento.py
 
+    - name: Entrenar modelo Winner
+      run: python entrenamiento_winner.py
+
     - name: Guardar modelos
       uses: EndBug/add-and-commit@v9
       with:
