@@ -32,5 +32,5 @@ jobs:
     - name: Guardar modelos
       uses: EndBug/add-and-commit@v9
       with:
-        add: 'models/*.pkl'
+        add: 'models/**/*.pkl models/**/*.txt'
         message: 'Modelos entrenados automáticamente tras pipeline'
