@@ -57,40 +57,6 @@ fighter_2 = st.selectbox('Selecciona el segundo peleador:', fighters_list, key='
 duplicate_selection = fighter_1 == fighter_2
 if duplicate_selection:
     st.warning('Debes seleccionar dos peleadores distintos.')
-
-# Selección de formato (se convierte a valor numérico según tu tabla)
-format_mapping = {'3 Rnd (5-5-5)': 0, '3 Rnd + OT (5-5-5-5)': 1, '5 Rnd (5-5-5-5-5)': 2}
-format_selection = st.selectbox('Selecciona el formato de la pelea:', list(format_mapping.keys()), key='format_selection')
-format_input = format_mapping[format_selection]
-
-# Selección de clase de peso (se convierte a valor numérico según tu tabla)
-weight_class_mapping = {
-    'Bantamweight': 0, 'Catchweight': 1, 'Featherweight': 2, 'Flyweight': 3, 'Heavyweight': 4,
-    'Light Heavyweight': 5, 'Lightweight': 6, 'Middleweight': 7, 'Welterweight': 8, 'Women\'s Bantamweight': 9,
-    'Women\'s Featherweight': 10, 'Women\'s Flyweight': 11, 'Women\'s Strawweight': 12
-}
-weight_class_selection = st.selectbox('Selecciona la clase de peso:', list(weight_class_mapping.keys()), key='weight_class_selection')
-weight_class_input = weight_class_mapping[weight_class_selection]
-
-# Forma actual de los peleadores (se convierte a valor numérico según tu tabla)
-form_mapping = {
-    "": 0, "L": 1, "LL": 2, "LLL": 3, "LLLL": 4, "LLLLL": 5, "LLLLW": 6,
-    "LLLW": 7, "LLLWL": 8, "LLLWW": 9, "LLW": 10, "LLWL": 11, "LLWLL": 12, "LLWLW": 13,
-    "LLWW": 14, "LLWWL": 15, "LLWWW": 16, "LW": 17, "LWL": 18, "LWLL": 19, "LWLLL": 20,
-    "LWLLW": 21, "LWLW": 22, "LWLWL": 23, "LWLWW": 24, "LWW": 25, "LWWL": 26, "LWWLL": 27,
-    "LWWLW": 28, "LWWW": 29, "LWWWL": 30, "LWWWW": 31, "W": 32, "WL": 33, "WLL": 34,
-    "WLLL": 35, "WLLLL": 36, "WLLLW": 37, "WLLW": 38, "WLLWL": 39, "WLLWW": 40, "WLW": 41,
-    "WLWL": 42, "WLWLL": 43, "WLWLW": 44, "WLWW": 45, "WLWWL": 46, "WLWWW": 47, "WW": 48,
-    "WWL": 49, "WWLL": 50, "WWLLL": 51, "WWLLW": 52, "WWLW": 53, "WWLWL": 54, "WWLWW": 55,
-    "WWW": 56, "WWWL": 57, "WWWLL": 58, "WWWLW": 59, "WWWW": 60, "WWWWL": 61, "WWWWW": 62
-}
-# Forma actual de los peleadores (con clave única)
-form_fighter_1 = st.selectbox(f'Introduce la forma de {fighter_1}:', list(form_mapping.keys()), key='form_fighter_1')
-form_fighter_2 = st.selectbox(f'Introduce la forma de {fighter_2}:', list(form_mapping.keys()), key='form_fighter_2')
-
-form_last_5_fighter_1 = form_mapping[form_fighter_1]
-form_last_5_fighter_2 = form_mapping[form_fighter_2]
-
 # Obtener las estadísticas de los peleadores
 stats_fighter_1 = df_estadisticas_ultimos_5[df_estadisticas_ultimos_5['Fighter'] == fighter_1].drop(columns=['Fighter'])
 stats_fighter_2 = df_estadisticas_ultimos_5[df_estadisticas_ultimos_5['Fighter'] == fighter_2].drop(columns=['Fighter'])
@@ -98,14 +64,17 @@ stats_fighter_2 = df_estadisticas_ultimos_5[df_estadisticas_ultimos_5['Fighter']
 if stats_fighter_1.empty or stats_fighter_2.empty:
     st.error("No se encontraron estadísticas para uno o ambos peleadores.")
 else:
-    # Agregar los valores adicionales a las estadísticas de cada peleador
-    stats_fighter_1['Format'] = format_input
-    stats_fighter_1['form_last_5'] = form_last_5_fighter_1
-    stats_fighter_1['Weight Class'] = weight_class_input
+    # Obtener valores de formato, clase de peso y forma de los últimos 5 desde las estadísticas
+    format_input = stats_fighter_1["Format"].iloc[0]
+    weight_class_input = stats_fighter_1["Weight Class"].iloc[0]
+    form_last_5_fighter_1 = stats_fighter_1["form_last_5"].iloc[0]
+    form_last_5_fighter_2 = stats_fighter_2["form_last_5"].iloc[0]
 
-    stats_fighter_2['Format'] = format_input
-    stats_fighter_2['form_last_5'] = form_last_5_fighter_2
-    stats_fighter_2['Weight Class'] = weight_class_input
+    # Mostrar estos valores para transparencia
+    st.write(f"Formato de la pelea: {format_input}")
+    st.write(f"Clase de peso: {weight_class_input}")
+    st.write(f"Forma últimos 5 de {fighter_1}: {form_last_5_fighter_1}")
+    st.write(f"Forma últimos 5 de {fighter_2}: {form_last_5_fighter_2}")
 
     # Asegurarse de que las columnas estén en el orden correcto
     try:
