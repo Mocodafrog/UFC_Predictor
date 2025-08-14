@@ -81,6 +81,9 @@ Algunas librerías se utilizan solo para análisis puntuales y no se instalan po
 Los modelos se entrenan mediante scripts ubicados en la raíz del proyecto.
 Los artefactos generados se guardan en `models/{MODEL_VERSION}/`.
 
+Antes de ejecutar estos scripts, asegúrate de que el archivo `data/fight_stats.csv` exista,
+ya que contiene las características utilizadas para el entrenamiento.
+
 Para entrenar el modelo del método de victoria:
 
 ```bash
