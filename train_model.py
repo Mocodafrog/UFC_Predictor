@@ -27,12 +27,21 @@ DATA_DIR = os.path.abspath("data")
 MODELS_DIR = os.path.abspath(os.path.join("models", MODEL_VERSION))
 os.makedirs(MODELS_DIR, exist_ok=True)
 
-fight_stats = pd.read_csv(os.path.join(DATA_DIR, "fight_stats.csv"))
-columnas_X = (
-    pd.read_csv(os.path.join(DATA_DIR, "columnas_X.csv"), header=None)
-    .squeeze()
-    .tolist()
-)
+try:
+    fight_stats = pd.read_csv(os.path.join(DATA_DIR, "fight_stats.csv"))
+except FileNotFoundError:
+    print("❌ No se encontró 'data/fight_stats.csv'. Genera este archivo antes de entrenar.")
+    raise SystemExit(1)
+
+try:
+    columnas_X = (
+        pd.read_csv(os.path.join(DATA_DIR, "columnas_X.csv"), header=None)
+        .squeeze()
+        .tolist()
+    )
+except FileNotFoundError:
+    print("❌ No se encontró 'data/columnas_X.csv'. Asegúrate de crear este archivo.")
+    raise SystemExit(1)
 
 X = fight_stats[columnas_X]
 
