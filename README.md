@@ -75,6 +75,27 @@ Algunas librerías se utilizan solo para análisis puntuales y no se instalan po
 - scipy
 - tensorflow
 - openpyxl
+ 
+## 🛠 Generación de datos
+
+El script `UFC_Pipeline.py` automatiza la descarga y el procesamiento de información de peleadores y combates.
+Genera tres archivos dentro de `data/`:
+
+- `fighters.csv`: información básica de los peleadores.
+- `fight_stats.csv`: estadísticas a nivel de pelea.
+- `df_estadisticas_ultimos_5.csv`: promedios de las últimas cinco peleas por peleador.
+
+Uso básico:
+
+```bash
+python UFC_Pipeline.py
+```
+
+Parámetros opcionales:
+
+- `--start-event` y `--end-event` delimitan el rango de eventos a procesar.
+- `--max-fights` limita la cantidad total de peleas.
+- `--fighters-output`, `--fight-stats-output` y `--last-five-output` permiten cambiar las rutas de salida.
 
 ## 🏋️ Entrenamiento de modelos
 

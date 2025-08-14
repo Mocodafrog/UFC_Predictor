@@ -84,3 +84,35 @@ def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
             "birthdate",
         ]
     ]
+
+
+def compute_last_five_stats(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Compute per-fighter statistics for their last five bouts.
+
+    The function expects the raw fight statistics returned by
+    :func:`scrape_fight_stats` and produces two DataFrames:
+
+    * ``fight_stats`` – the input ordered by event/fight.
+    * ``last_five`` – only the last five fights for each fighter.
+
+    Parameters
+    ----------
+    df:
+        Raw fight statistics.
+
+    Returns
+    -------
+    tuple[pandas.DataFrame, pandas.DataFrame]
+        Processed fight statistics and a reduced dataset with the last five
+        fights per competitor.
+    """
+
+    if df.empty:
+        return df, df
+
+    df = df.copy()
+    # Assign a monotonically increasing index per fighter to preserve order.
+    df["_idx"] = df.groupby("Fighter").cumcount()
+    df.sort_values(["Fighter", "_idx"], inplace=True)
+    last_five = df.groupby("Fighter").tail(5).drop(columns="_idx")
+    return df.drop(columns="_idx"), last_five

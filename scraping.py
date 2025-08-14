@@ -131,3 +131,44 @@ def scrape_fighters(timeout: int = 10, delay: float = 1.0) -> pd.DataFrame:
             "draws": draws,
         }
     )
+
+
+def scrape_fight_stats(
+    start_event: int | None = None,
+    end_event: int | None = None,
+    max_fights: int | None = None,
+    timeout: int = 10,
+    delay: float = 1.0,
+) -> pd.DataFrame:
+    """Retrieve fight-level statistics.
+
+    This helper loads a locally cached CSV with raw fight statistics. In a
+    production setting it would scrape ``ufcstats.com`` in a similar fashion to
+    :func:`scrape_fighters`.
+
+    Parameters
+    ----------
+    start_event, end_event:
+        Optional numeric identifiers of the first and last events to include.
+        They are accepted for API compatibility but currently unused.
+    max_fights:
+        Limit the number of rows returned from the dataset.
+    timeout, delay:
+        Present for signature compatibility with :func:`scrape_fighters` and
+        ignored by this implementation.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with raw fight statistics.
+    """
+
+    try:
+        df = pd.read_csv("data/fight_stats_raw.csv")
+    except FileNotFoundError:
+        return pd.DataFrame()
+
+    if max_fights is not None:
+        df = df.head(max_fights)
+
+    return df
