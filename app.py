@@ -58,19 +58,6 @@ duplicate_selection = fighter_1 == fighter_2
 if duplicate_selection:
     st.warning('Debes seleccionar dos peleadores distintos.')
 
-# Selección de formato (se convierte a valor numérico según tu tabla)
-format_mapping = {'3 Rnd (5-5-5)': 0, '3 Rnd + OT (5-5-5-5)': 1, '5 Rnd (5-5-5-5-5)': 2}
-format_selection = st.selectbox('Selecciona el formato de la pelea:', list(format_mapping.keys()), key='format_selection')
-format_input = format_mapping[format_selection]
-
-# Selección de clase de peso (se convierte a valor numérico según tu tabla)
-weight_class_mapping = {
-    'Bantamweight': 0, 'Catchweight': 1, 'Featherweight': 2, 'Flyweight': 3, 'Heavyweight': 4,
-    'Light Heavyweight': 5, 'Lightweight': 6, 'Middleweight': 7, 'Welterweight': 8, 'Women\'s Bantamweight': 9,
-    'Women\'s Featherweight': 10, 'Women\'s Flyweight': 11, 'Women\'s Strawweight': 12
-}
-weight_class_selection = st.selectbox('Selecciona la clase de peso:', list(weight_class_mapping.keys()), key='weight_class_selection')
-weight_class_input = weight_class_mapping[weight_class_selection]
 # Obtener las estadísticas de los peleadores
 stats_fighter_1 = df_estadisticas_ultimos_5[df_estadisticas_ultimos_5['Fighter'] == fighter_1].drop(columns=['Fighter'])
 stats_fighter_2 = df_estadisticas_ultimos_5[df_estadisticas_ultimos_5['Fighter'] == fighter_2].drop(columns=['Fighter'])
@@ -82,17 +69,15 @@ else:
     form_last_5_fighter_1 = stats_fighter_1["form_last_5"].iloc[0]
     form_last_5_fighter_2 = stats_fighter_2["form_last_5"].iloc[0]
 
+    # Asignar formato y clase de peso directamente desde las estadísticas filtradas
+    format_input = stats_fighter_1["Format"].iloc[0]
+    weight_class_input = stats_fighter_1["Weight Class"].iloc[0]
+
     # Mostrar valores seleccionados y calculados para transparencia
-    st.write(f"Formato de la pelea: {format_selection}")
-    st.write(f"Clase de peso: {weight_class_selection}")
+    st.write(f"Formato de la pelea: {format_input}")
+    st.write(f"Clase de peso: {weight_class_input}")
     st.write(f"Forma últimos 5 de {fighter_1}: {form_last_5_fighter_1}")
     st.write(f"Forma últimos 5 de {fighter_2}: {form_last_5_fighter_2}")
-
-    # Sobrescribir formato y clase de peso en las estadísticas
-    stats_fighter_1['Format'] = format_input
-    stats_fighter_1['Weight Class'] = weight_class_input
-    stats_fighter_2['Format'] = format_input
-    stats_fighter_2['Weight Class'] = weight_class_input
 
     # Asegurarse de que las columnas estén en el orden correcto
     try:
