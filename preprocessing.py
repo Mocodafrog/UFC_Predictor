@@ -84,15 +84,3 @@ def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
             "birthdate",
         ]
     ]
-
-
-    Parameters
-    ----------
-    df_fights:
-
-
-    Returns
-    -------
-    pandas.DataFrame
-
-    return df_fights
