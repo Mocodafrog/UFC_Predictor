@@ -104,6 +104,8 @@ if __name__ == "__main__":
     fight_stats.to_csv(DATA_DIR / "fight_stats.csv", index=False)
 
     reduced_cols = [
+        "Weight Class",
+        "Format",
         "fighter_name",
         "date",
         "form_last_5",
