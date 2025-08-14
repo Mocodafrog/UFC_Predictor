@@ -27,6 +27,10 @@ jobs:
       run: |
         python UFC_Pipeline.py
 
+    - name: Scrape fight stats
+      run: |
+        python -c "from scraping import scrape_fight_stats; scrape_fight_stats()"
+
     - name: Generate fight statistics
       run: |
         python fight_stats.py
