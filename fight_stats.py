@@ -92,9 +92,6 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
             .reset_index(level=0, drop=True)
         )
 
-    # Rename fighter column for clarity
-    df.rename(columns={"Fighter": "fighter_name"}, inplace=True)
-
     return df
 
 
@@ -104,7 +101,7 @@ if __name__ == "__main__":
     fight_stats.to_csv(DATA_DIR / "fight_stats.csv", index=False)
 
     reduced_cols = [
-        "fighter_name",
+        "Fighter",
         "date",
         "form_last_5",
     ] + [c for c in fight_stats.columns if c.endswith("_rolling_mean")]
