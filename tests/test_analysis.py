@@ -5,16 +5,16 @@ import pandas as pd
 import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from analysis import compute_last_five_stats
+from analysis import aggregate_last_five_stats
 
 
-def test_compute_last_five_stats_missing_columns():
+def test_aggregate_last_five_stats_missing_columns():
     df = pd.DataFrame({"fighter": ["A"]})
     with pytest.raises(ValueError):
-        compute_last_five_stats(df)
+        aggregate_last_five_stats(df)
 
 
-def test_compute_last_five_stats_tail_and_date_conversion():
+def test_aggregate_last_five_stats_tail_and_date_conversion():
     df = pd.DataFrame(
         {
             "fighter": ["A"] * 6,
@@ -23,7 +23,7 @@ def test_compute_last_five_stats_tail_and_date_conversion():
         }
     )
 
-    result = compute_last_five_stats(df)
+    result = aggregate_last_five_stats(df)
 
     assert pd.api.types.is_datetime64_any_dtype(result["date"])
     assert result.loc[result["fighter"] == "A", "KD"].iloc[0] == pytest.approx(3.0)

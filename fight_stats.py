@@ -28,12 +28,12 @@ def _time_to_seconds(text: str) -> int:
 
 
 def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.csv") -> pd.DataFrame:
-    """Compute rolling statistics for the last five fights of each fighter.
+    """Generate a rolling dataset for the last five fights of each fighter.
 
-    The function expects the raw fight statistics CSV produced by the scraping
-    utilities.  It parses numeric values, computes per-fighter rolling means for
-    several statistics and a ``form_last_5`` column indicating the number of
-    wins in the last five fights.
+    This routine keeps one row per bout and appends rolling averages for
+    numerous statistics as well as a ``form_last_5`` column with the number of
+    recent wins. For a per-fighter aggregated summary, see
+    :func:`analysis.aggregate_last_five_stats`.
     """
     df = pd.read_csv(csv_path)
 

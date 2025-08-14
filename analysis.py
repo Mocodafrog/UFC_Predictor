@@ -7,8 +7,12 @@ import pandas as pd
 MIN_COLUMNS = {"fighter", "date"}
 
 
-def compute_last_five_stats(df_fights: pd.DataFrame) -> pd.DataFrame:
+def aggregate_last_five_stats(df_fights: pd.DataFrame) -> pd.DataFrame:
     """Aggregate statistics for each fighter's last five fights.
+
+    Unlike :func:`fight_stats.compute_last_five_stats`, which returns a row per
+    bout with rolling averages, this utility collapses the last five bouts of
+    each fighter into a single aggregated record.
 
     Parameters
     ----------

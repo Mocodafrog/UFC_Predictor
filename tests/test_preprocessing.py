@@ -8,8 +8,6 @@ from preprocessing import (
     convert_height_to_cm,
     convert_weight_to_kg,
     convert_reach_to_cm,
-    preprocess_fighters,
-)
 
 def test_convert_height_to_cm_malformed():
     assert convert_height_to_cm("--") is None
@@ -27,5 +25,4 @@ def test_convert_reach_to_cm_malformed():
     assert convert_reach_to_cm("--") is None
     assert convert_reach_to_cm("") is None
     assert convert_reach_to_cm("bad format") is None
-
 
