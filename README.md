@@ -93,3 +93,12 @@ Para entrenar el modelo del ganador del combate:
 python entrenamiento_winner.py
 ```
 
+## 📊 Agregación vs Dataset Rolling
+
+- `analysis.aggregate_last_five_stats`: produce un único registro por
+  peleador calculando la media de las estadísticas de sus últimas cinco
+  peleas.
+- `fight_stats.compute_last_five_stats`: genera un dataset con una fila por
+  combate e incluye medias móviles y la racha de victorias de los últimos
+  cinco enfrentamientos.
+
