@@ -1,4 +1,4 @@
-"""Data cleaning and preprocessing utilities for UFC data."""
+
 from __future__ import annotations
 import re
 import pandas as pd
@@ -86,39 +86,13 @@ def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
     ]
 
 
-def add_rolling_features(df_fights: pd.DataFrame) -> pd.DataFrame:
-    """Compute rolling five-fight averages and form for each fighter.
-
     Parameters
     ----------
     df_fights:
-        DataFrame containing per-fight statistics. It must include the
-        columns ``fighter_name`` and ``result`` in addition to numeric
-        columns such as ``KD``, ``Sig Str``, ``TD`` and ``Control``.
+
 
     Returns
     -------
     pandas.DataFrame
-        ``df_fights`` enriched with the rolling means for the selected
-        numeric columns and a ``form_last_5`` column indicating the
-        average win ratio over the last five fights for each fighter.
-    """
-
-    cols = [c for c in ["KD", "Sig Str", "TD", "Control"] if c in df_fights.columns]
-    rolling = (
-        df_fights.groupby("fighter_name")[cols]
-        .rolling(5, min_periods=1)
-        .mean()
-        .reset_index(level=0, drop=True)
-    )
-    df_fights[cols] = rolling
-
-    wins = (df_fights["result"] == "W").astype(int)
-    df_fights["form_last_5"] = (
-        wins.groupby(df_fights["fighter_name"])  # type: ignore[arg-type]
-        .rolling(5, min_periods=1)
-        .mean()
-        .reset_index(level=0, drop=True)
-    )
 
     return df_fights
