@@ -131,3 +131,157 @@ def scrape_fighters(timeout: int = 10, delay: float = 1.0) -> pd.DataFrame:
             "draws": draws,
         }
     )
+
+
+def scrape_fight_stats(
+    timeout: int = 10,
+    delay: float = 1.0,
+    max_events: Optional[int] = None,
+    output_csv: str = "data/fight_stats_raw.csv",
+) -> pd.DataFrame:
+    """Scrape individual fight statistics from completed UFC events.
+
+    Parameters
+    ----------
+    timeout:
+        Timeout in seconds for each HTTP request.
+    delay:
+        Seconds to wait between requests to avoid server overloading.
+    max_events:
+        Optional maximum number of events to scrape. Useful for testing.
+    output_csv:
+        Path where the resulting CSV will be written.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame containing per-fighter statistics for each fight.
+    """
+
+    results: list[dict[str, str]] = []
+
+    with requests.Session() as session:
+        session.headers.update(
+            {
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/119.0 Safari/537.36"
+                )
+            }
+        )
+
+        events_url = "http://ufcstats.com/statistics/events/completed"
+        events_soup = fetch_soup(session, events_url, timeout=timeout)
+        if not events_soup:
+            return pd.DataFrame()
+
+        event_links = [
+            a["href"]
+            for a in events_soup.select("tr.b-statistics__table-row a")
+            if a.get("href")
+        ]
+
+        for idx, event_url in enumerate(event_links):
+            if max_events is not None and idx >= max_events:
+                break
+
+            time.sleep(delay)
+            event_soup = fetch_soup(session, event_url, timeout=timeout)
+            if not event_soup:
+                continue
+
+            event_name_tag = event_soup.select_one("h2.b-content__title")
+            event_name = event_name_tag.get_text(strip=True) if event_name_tag else ""
+
+            fight_rows = event_soup.select("tr.b-fight-details__table-row")
+            for row in fight_rows:
+                fight_link_tag = row.find(
+                    "a", href=lambda x: x and "fight-details" in x
+                )
+                if not fight_link_tag:
+                    continue
+
+                fight_url = fight_link_tag["href"]
+                fight_title = fight_link_tag.get_text(strip=True)
+                weight_class_tag = row.select_one(
+                    "td.b-fight-details__table-col:nth-of-type(1)"
+                )
+                weight_class = (
+                    weight_class_tag.get_text(strip=True) if weight_class_tag else ""
+                )
+
+                time.sleep(delay)
+                fight_soup = fetch_soup(session, fight_url, timeout=timeout)
+                if not fight_soup:
+                    continue
+
+                info: dict[str, str] = {}
+                for li in fight_soup.select("ul.b-fight-details__list li"):
+                    key_tag = li.select_one("i")
+                    if not key_tag:
+                        continue
+                    key = key_tag.get_text(strip=True).rstrip(":")
+                    value = li.get_text(strip=True).replace(key_tag.get_text(strip=True), "").strip()
+                    info[key] = value
+
+                stats_table = fight_soup.select_one("table.b-fight-details__table")
+                if not stats_table:
+                    continue
+
+                headers = [
+                    th.get_text(strip=True) for th in stats_table.select("thead th")
+                ]
+
+                for tr in stats_table.select("tbody tr"):
+                    fighter_tag = tr.select_one(
+                        "td.b-fight-details__table-col:first-child a"
+                    )
+                    if not fighter_tag:
+                        continue
+                    fighter_name = fighter_tag.get_text(strip=True)
+
+                    cells = [td.get_text(strip=True) for td in tr.find_all("td")]
+                    if len(cells) != len(headers):
+                        continue
+                    data = dict(zip(headers, cells))
+
+                    results.append(
+                        {
+                            "Event": event_name,
+                            "Fight": fight_title,
+                            "Fighter": fighter_name,
+                            "Weight Class": weight_class,
+                            "Winner": "W"
+                            if "b-fight-details__table-row__withdrawn" not in tr.get("class", [])
+                            and "b-fight-details__table-row--loser" not in tr.get("class", [])
+                            and "b-fight-details__table-row--draw" not in tr.get("class", [])
+                            and "b-fight-details__table-row--no-contest" not in tr.get("class", [])
+                            and "b-fight-details__table-row--ko" not in tr.get("class", [])
+                            and "b-fight-details__table-row--winner" in tr.get("class", [])
+                            else "L",
+                            "KD": data.get("KD", ""),
+                            "Sig. Str.": data.get("Sig. str.", ""),
+                            "Total Str.": data.get("Total str.", ""),
+                            "TD": data.get("TD", ""),
+                            "Sub. Att": data.get("Sub. att", ""),
+                            "Reversal": data.get("Rev.", ""),
+                            "Control Time": data.get("Ctrl", ""),
+                            "Head": data.get("Head", ""),
+                            "Body": data.get("Body", ""),
+                            "Leg": data.get("Leg", ""),
+                            "Distance": data.get("Distance", ""),
+                            "Clinch": data.get("Clinch", ""),
+                            "Ground": data.get("Ground", ""),
+                            "Method": info.get("Method", ""),
+                            "Fight_lenght": info.get("Time", ""),
+                            "Rounds": info.get("Round", ""),
+                            "Format": info.get("Time format", ""),
+                            "Referee": info.get("Referee", ""),
+                        }
+                    )
+
+    df = pd.DataFrame(results)
+    if not df.empty:
+        df.to_csv(output_csv, index=False)
+    return df
