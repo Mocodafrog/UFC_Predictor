@@ -1,4 +1,4 @@
-"""Data cleaning and preprocessing utilities for UFC fighters."""
+"""Data cleaning and preprocessing utilities for UFC fighters and fights."""
 from __future__ import annotations
 import re
 import pandas as pd
@@ -84,3 +84,21 @@ def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
             "birthdate",
         ]
     ]
+
+
+def add_fight_number(df_fights: pd.DataFrame) -> pd.DataFrame:
+    """Sort fights by fighter and date and assign sequential numbers.
+
+    Parameters
+    ----------
+    df_fights:
+        DataFrame containing at least ``fighter_name`` and ``date`` columns.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The sorted DataFrame with a new ``fight_number`` column.
+    """
+    df_fights = df_fights.sort_values(["fighter_name", "date"])
+    df_fights["fight_number"] = df_fights.groupby("fighter_name").cumcount() + 1
+    return df_fights
