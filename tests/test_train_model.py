@@ -1,13 +1,9 @@
-import os
-import sys
-
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import train_model  # noqa: E402
+import ufc_predictor.train as train_module
+from ufc_predictor.train import train
 
 
 class DummyGridSearchCV:
@@ -45,29 +41,29 @@ def test_train_split_deterministic(tmp_path, monkeypatch):
     X = pd.DataFrame({"feat": range(12)})
     y = [0, 1] * 6
 
-    train_model.X = X
-    train_model.fight_stats = X.assign(Winner=y)
-    train_model.models = {
-        "LogReg": (LogisticRegression(random_state=train_model.RANDOM_STATE), {})
+    train_module.X = X
+    train_module.fight_stats = X.assign(Winner=y)
+    train_module.models = {
+        "LogReg": (LogisticRegression(random_state=train_module.RANDOM_STATE), {})
     }
-    train_model.MODELS_DIR = tmp_path
+    train_module.MODELS_DIR = tmp_path
 
-    monkeypatch.setattr(train_model.joblib, "dump", lambda *args, **kwargs: None)
-    monkeypatch.setattr(train_model, "GridSearchCV", DummyGridSearchCV)
-    monkeypatch.setattr(train_model, "StackingClassifier", DummyStackingClassifier)
+    monkeypatch.setattr(train_module.joblib, "dump", lambda *args, **kwargs: None)
+    monkeypatch.setattr(train_module, "GridSearchCV", DummyGridSearchCV)
+    monkeypatch.setattr(train_module, "StackingClassifier", DummyStackingClassifier)
 
     splits = []
-    real_tts = train_model.train_test_split
+    real_tts = train_module.train_test_split
 
     def record_split(*args, **kwargs):
         result = real_tts(*args, **kwargs)
         splits.append(result)
         return result
 
-    monkeypatch.setattr(train_model, "train_test_split", record_split)
+    monkeypatch.setattr(train_module, "train_test_split", record_split)
 
-    train_model.train("Winner")
-    train_model.train("Winner")
+    train("Winner")
+    train("Winner")
 
     (X_train1, X_test1, y_train1, y_test1), (X_train2, X_test2, y_train2, y_test2) = splits
 

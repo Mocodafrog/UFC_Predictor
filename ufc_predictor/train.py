@@ -8,6 +8,8 @@ base estimators, fitting a stacking classifier and persisting both the
 models and their evaluation metrics under ``models/{MODEL_VERSION}``.
 """
 
+__all__ = ["train"]
+
 import os
 
 import joblib
