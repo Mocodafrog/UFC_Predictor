@@ -9,6 +9,7 @@ models and their evaluation metrics under ``models/{MODEL_VERSION}``.
 """
 
 import os
+
 import joblib
 import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, StackingClassifier
@@ -20,8 +21,9 @@ from lightgbm import LGBMClassifier
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
 
+from ufc_predictor.config import MODEL_VERSION
+
 RANDOM_STATE = 42
-MODEL_VERSION = "1.0"
 
 DATA_DIR = os.path.abspath("data")
 MODELS_DIR = os.path.abspath(os.path.join("models", MODEL_VERSION))
