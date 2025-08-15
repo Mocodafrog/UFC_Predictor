@@ -84,3 +84,38 @@ def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
             "birthdate",
         ]
     ]
+
+def compute_last_five_stats(df: pd.DataFrame) -> pd.DataFrame:
+    """Compute rolling averages for the previous five fights of each fighter.
+
+    Parameters
+    ----------
+    df:
+        DataFrame containing at least ``Fighter``, ``Result`` and numeric
+        statistics (e.g. ``KD``, ``TD``).
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame where numeric columns represent the average of the previous
+        five fights and includes a ``form_last_5`` column with the win ratio in
+        the same window. The original ``Result`` column is dropped in the
+        returned DataFrame.
+    """
+    df = df.copy()
+    if "Fighter" not in df.columns or "Result" not in df.columns:
+        raise ValueError("DataFrame must contain 'Fighter' and 'Result' columns")
+
+    # Map results to numeric wins (1) and losses (0)
+    df["_win"] = df["Result"].map({"W": 1, "L": 0}).fillna(df["Result"])
+
+    numeric_cols = df.select_dtypes(include="number").columns.difference(["_win"])
+    grouped = df.groupby("Fighter")
+
+    # Proportion of wins in the previous five fights
+    df["form_last_5"] = grouped["_win"].transform(lambda s: s.shift().rolling(5, min_periods=1).mean())
+
+    for col in numeric_cols:
+        df[col] = grouped[col].transform(lambda s: s.shift().rolling(5, min_periods=1).mean())
+
+    return df.drop(columns=["Result", "_win"])
