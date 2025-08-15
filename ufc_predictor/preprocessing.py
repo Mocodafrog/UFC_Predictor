@@ -37,7 +37,7 @@ def convert_reach_to_cm(reach: str) -> float | None:
 
 
 def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
-    """Clean and enrich the fighters DataFrame returned by :func:`scrape_fighters`.
+    """Clean and enrich the fighters DataFrame returned by :func:`ufc_predictor.scraping.scrape_fighters`.
 
     The function removes duplicated names, assigns a numeric ``fighter_id`` and
     converts physical metrics to metric units.
@@ -45,7 +45,7 @@ def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
     Parameters
     ----------
     df:
-        Raw DataFrame obtained from ``scrape_fighters``.
+        Raw DataFrame obtained from ``ufc_predictor.scraping.scrape_fighters``.
 
     Returns
     -------

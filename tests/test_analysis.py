@@ -1,11 +1,7 @@
-import os
-import sys
-
 import pandas as pd
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from analysis import aggregate_last_five_stats
+from ufc_predictor.analysis import aggregate_last_five_stats
 
 
 def test_aggregate_last_five_stats_missing_columns():

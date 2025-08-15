@@ -1,7 +1,7 @@
 """Command-line entry point for the UFC data pipeline."""
 import argparse
-from scraping import scrape_fighters
-from preprocessing import preprocess_fighters
+from ufc_predictor.scraping import scrape_fighters
+from ufc_predictor.preprocessing import preprocess_fighters
 
 def main() -> None:
     """Run the scraping and preprocessing pipeline.

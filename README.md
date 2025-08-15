@@ -17,8 +17,8 @@ El flujo de trabajo incluye desde el web scraping de datos de peleadores y comba
 
 ## Estructura del proyecto
 
-- `scraping.py`: Script de extracción de datos desde UFCStats.com
-- `preprocessing.py`: Limpieza y preparación de los datos
+- `ufc_predictor.scraping`: Script de extracción de datos desde UFCStats.com
+- `ufc_predictor.preprocessing`: Limpieza y preparación de los datos
 - `entrenamiento.py`: Entrenamiento y validación de modelos predictivos
 - `app.py`: Código de la aplicación Streamlit
 - `requirements.txt`: Librerías necesarias para ejecutar el proyecto
@@ -98,10 +98,10 @@ python entrenamiento_winner.py
 
 ## 📊 Agregación vs Dataset Rolling
 
-- `analysis.aggregate_last_five_stats`: produce un único registro por
+- `ufc_predictor.analysis.aggregate_last_five_stats`: produce un único registro por
   peleador calculando la media de las estadísticas de sus últimas cinco
   peleas.
-- `fight_stats.compute_last_five_stats`: genera un dataset con una fila por
+- `ufc_predictor.fight_stats.compute_last_five_stats`: genera un dataset con una fila por
   combate e incluye medias móviles y la racha de victorias de los últimos
   cinco enfrentamientos.
 
