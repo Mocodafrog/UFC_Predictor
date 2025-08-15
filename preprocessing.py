@@ -64,11 +64,15 @@ def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
     df["weight_kg"].fillna(0, inplace=True)
     df["reach_cm"].fillna(0, inplace=True)
 
-    df["birthdate"] = df["birthdate"].apply(
-        lambda x: re.search(r"\w{3} \d{2}, \d{4}", x).group(0)
-        if re.search(r"\w{3} \d{2}, \d{4}", x)
-        else "N/A"
-    )
+    def _extract_birthdate(x: object) -> str:
+        """Extract a normalized birthdate string if possible."""
+        if isinstance(x, str):
+            match = re.search(r"\w{3} \d{2}, \d{4}", str(x))
+            if match:
+                return match.group(0)
+        return "N/A"
+
+    df["birthdate"] = df["birthdate"].apply(_extract_birthdate)
 
     return df[
         [
