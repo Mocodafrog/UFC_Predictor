@@ -65,9 +65,12 @@ def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
     df["reach_cm"].fillna(0, inplace=True)
 
     df["birthdate"] = df["birthdate"].apply(
-        lambda x: re.search(r"\w{3} \d{2}, \d{4}", x).group(0)
-        if re.search(r"\w{3} \d{2}, \d{4}", x)
-        else "N/A"
+        lambda x: (
+            re.search(r"\w{3} \d{2}, \d{4}", str(x)).group(0)
+            if pd.notnull(x)
+            and re.search(r"\w{3} \d{2}, \d{4}", str(x))
+            else "N/A"
+        )
     )
 
     return df[
