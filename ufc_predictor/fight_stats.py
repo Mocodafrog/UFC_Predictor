@@ -33,7 +33,7 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
     This routine keeps one row per bout and appends rolling averages for
     numerous statistics as well as a ``form_last_5`` column with the number of
     recent wins. For a per-fighter aggregated summary, see
-    :func:`analysis.aggregate_last_five_stats`.
+    :func:`ufc_predictor.analysis.aggregate_last_five_stats`.
     """
     df = pd.read_csv(csv_path)
 

@@ -1,10 +1,7 @@
-import os
-import sys
 import pandas as pd
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from preprocessing import (
+from ufc_predictor.preprocessing import (
     convert_height_to_cm,
     convert_weight_to_kg,
     convert_reach_to_cm,
