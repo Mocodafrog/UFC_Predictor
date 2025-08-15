@@ -2,7 +2,7 @@ import streamlit as st
 import joblib
 import pandas as pd
 
-MODEL_VERSION = "1.0"  # Versión del modelo utilizada para construir las rutas
+from ufc_predictor.config import MODEL_VERSION
 
 
 @st.cache_resource(show_spinner="Cargando modelo del ganador...")
