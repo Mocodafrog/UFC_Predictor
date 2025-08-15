@@ -34,8 +34,15 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
     numerous statistics as well as a ``form_last_5`` column with the number of
     recent wins. For a per-fighter aggregated summary, see
     :func:`ufc_predictor.analysis.aggregate_last_five_stats`.
+
+    If ``csv_path`` does not exist, an empty :class:`~pandas.DataFrame` is
+    returned and a message is printed.
     """
-    df = pd.read_csv(csv_path)
+    try:
+        df = pd.read_csv(csv_path)
+    except FileNotFoundError:
+        print(f"CSV file not found at {csv_path}")
+        return pd.DataFrame()
 
     # Sequential date placeholder to preserve chronological order per fighter
     df["date"] = df.groupby("Fighter").cumcount()
