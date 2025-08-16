@@ -19,94 +19,118 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.svm import SVC
-from lightgbm import LGBMClassifier
-from xgboost import XGBClassifier
-from catboost import CatBoostClassifier
 
 from ufc_predictor.config import MODEL_VERSION
 
 RANDOM_STATE = 42
 
 DATA_DIR = os.path.abspath("data")
-MODELS_DIR = os.path.abspath(os.path.join("models", MODEL_VERSION))
-os.makedirs(MODELS_DIR, exist_ok=True)
-
-try:
-    fight_stats = pd.read_csv(os.path.join(DATA_DIR, "fight_stats.csv"))
-except FileNotFoundError:
-    print("❌ No se encontró 'data/fight_stats.csv'. Genera este archivo antes de entrenar.")
-    raise SystemExit(1)
-
-try:
-    columnas_X = (
-        pd.read_csv(os.path.join(DATA_DIR, "columnas_X.csv"), header=None)
-        .squeeze()
-        .tolist()
-    )
-except FileNotFoundError:
-    print("❌ No se encontró 'data/columnas_X.csv'. Asegúrate de crear este archivo.")
-    raise SystemExit(1)
-
-X = fight_stats[columnas_X]
-
-models = {
-    "XGBoost": (
-        XGBClassifier(random_state=RANDOM_STATE),
-        {
-            "learning_rate": [0.01, 0.1],
-            "n_estimators": [100, 200],
-            "max_depth": [3, 5, 7],
-        },
-    ),
-    "LightGBM": (
-        LGBMClassifier(random_state=RANDOM_STATE),
-        {
-            "learning_rate": [0.01, 0.1],
-            "n_estimators": [100, 200],
-            "max_depth": [3, 5, 7],
-        },
-    ),
-    "CatBoost": (
-        CatBoostClassifier(verbose=0, random_state=RANDOM_STATE),
-        {"learning_rate": [0.01, 0.1], "iterations": [100, 200]},
-    ),
-    "RandomForest": (
-        RandomForestClassifier(random_state=RANDOM_STATE),
-        {
-            "n_estimators": [100, 200],
-            "max_depth": [10, 20],
-            "min_samples_split": [2, 5],
-        },
-    ),
-    "GradientBoosting": (
-        GradientBoostingClassifier(random_state=RANDOM_STATE),
-        {
-            "learning_rate": [0.01, 0.1],
-            "n_estimators": [100, 200],
-            "max_depth": [3, 5, 7],
-        },
-    ),
-    "LogisticRegression": (
-        LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
-        {"C": [0.1, 1, 10], "solver": ["lbfgs", "liblinear"]},
-    ),
-    "SVC": (
-        SVC(probability=True, random_state=RANDOM_STATE),
-        {"C": [0.1, 1, 10], "kernel": ["linear", "rbf"]},
-    ),
-}
 
 
-def train(target_column: str) -> None:
+def train(
+    target_column: str,
+    data_dir: str = DATA_DIR,
+    models_dir: str | None = None,
+    models: dict | None = None,
+) -> None:
     """Entrena modelos base y un stacking final para ``target_column``.
 
     Parameters
     ----------
     target_column:
         Nombre de la columna objetivo, por ejemplo ``"Method"`` o ``"Winner"``.
+    data_dir:
+        Directorio donde se encuentran ``fight_stats.csv`` y ``columnas_X.csv``.
+    models_dir:
+        Directorio donde se guardarán los modelos entrenados. Si ``None`` se
+        utiliza ``models/{MODEL_VERSION}``.
+    models:
+        Diccionario opcional con los modelos a entrenar. Si no se provee se
+        utilizan los modelos por defecto y se importan las dependencias
+        pesadas dentro de esta función.
     """
 
+    if models_dir is None:
+        models_dir = os.path.abspath(os.path.join("models", MODEL_VERSION))
+    os.makedirs(models_dir, exist_ok=True)
+
+    try:
+        fight_stats = pd.read_csv(os.path.join(data_dir, "fight_stats.csv"))
+    except FileNotFoundError:
+        print(
+            "❌ No se encontró 'data/fight_stats.csv'. Genera este archivo antes de entrenar."
+        )
+        raise SystemExit(1)
+
+    try:
+        columnas_X = pd.read_csv(
+            os.path.join(data_dir, "columnas_X.csv"), header=None
+        ).squeeze()
+        if isinstance(columnas_X, str):
+            columnas_X = [columnas_X]
+        else:
+            columnas_X = columnas_X.tolist()
+    except FileNotFoundError:
+        print(
+            "❌ No se encontró 'data/columnas_X.csv'. Asegúrate de crear este archivo."
+        )
+        raise SystemExit(1)
+
+    X = fight_stats[columnas_X]
     y = fight_stats[target_column]
+
+    if models is None:
+        from lightgbm import LGBMClassifier
+        from xgboost import XGBClassifier
+        from catboost import CatBoostClassifier
+
+        models = {
+            "XGBoost": (
+                XGBClassifier(random_state=RANDOM_STATE),
+                {
+                    "learning_rate": [0.01, 0.1],
+                    "n_estimators": [100, 200],
+                    "max_depth": [3, 5, 7],
+                },
+            ),
+            "LightGBM": (
+                LGBMClassifier(random_state=RANDOM_STATE),
+                {
+                    "learning_rate": [0.01, 0.1],
+                    "n_estimators": [100, 200],
+                    "max_depth": [3, 5, 7],
+                },
+            ),
+            "CatBoost": (
+                CatBoostClassifier(verbose=0, random_state=RANDOM_STATE),
+                {"learning_rate": [0.01, 0.1], "iterations": [100, 200]},
+            ),
+            "RandomForest": (
+                RandomForestClassifier(random_state=RANDOM_STATE),
+                {
+                    "n_estimators": [100, 200],
+                    "max_depth": [10, 20],
+                    "min_samples_split": [2, 5],
+                },
+            ),
+            "GradientBoosting": (
+                GradientBoostingClassifier(random_state=RANDOM_STATE),
+                {
+                    "learning_rate": [0.01, 0.1],
+                    "n_estimators": [100, 200],
+                    "max_depth": [3, 5, 7],
+                },
+            ),
+            "LogisticRegression": (
+                LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
+                {"C": [0.1, 1, 10], "solver": ["lbfgs", "liblinear"]},
+            ),
+            "SVC": (
+                SVC(probability=True, random_state=RANDOM_STATE),
+                {"C": [0.1, 1, 10], "kernel": ["linear", "rbf"]},
+            ),
+        }
+
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=RANDOM_STATE
     )
@@ -123,10 +147,11 @@ def train(target_column: str) -> None:
         grid.fit(X_train, y_train)
         joblib.dump(
             grid.best_estimator_,
-            os.path.join(MODELS_DIR, f"{nombre.lower()}_{target_suffix}.pkl"),
+            os.path.join(models_dir, f"{nombre.lower()}_{target_suffix}.pkl"),
         )
         mejores.append((nombre, grid.best_estimator_))
         print(f"✅ {nombre} mejores parámetros: {grid.best_params_}")
+
     stacking = StackingClassifier(
         estimators=mejores,
         final_estimator=LogisticRegression(random_state=RANDOM_STATE),
@@ -134,7 +159,7 @@ def train(target_column: str) -> None:
         n_jobs=-1,
     )
     stacking.fit(X_train, y_train)
-    joblib.dump(stacking, os.path.join(MODELS_DIR, f"stacking_{target_suffix}.pkl"))
+    joblib.dump(stacking, os.path.join(models_dir, f"stacking_{target_suffix}.pkl"))
 
     y_pred = stacking.predict(X_test)
     y_proba = stacking.predict_proba(X_test)
@@ -150,7 +175,7 @@ def train(target_column: str) -> None:
     print(f"ROC-AUC: {roc_auc:.4f}")
     print(f"Random state: {RANDOM_STATE}\n")
 
-    with open(os.path.join(MODELS_DIR, f"metrics_{target_suffix}.txt"), "w") as f:
+    with open(os.path.join(models_dir, f"metrics_{target_suffix}.txt"), "w") as f:
         f.write(f"Accuracy: {accuracy:.4f}\n")
         f.write(f"ROC-AUC: {roc_auc:.4f}\n")
         f.write(f"Random state: {RANDOM_STATE}\n")
