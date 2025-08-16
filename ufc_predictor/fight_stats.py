@@ -104,6 +104,10 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
 
 if __name__ == "__main__":
     fight_stats = compute_last_five_stats()
+    if fight_stats.empty:
+        print("No stats generated; skipping export.")
+        raise SystemExit(1)
+
     DATA_DIR.mkdir(exist_ok=True)
     fight_stats.to_csv(DATA_DIR / "fight_stats.csv", index=False)
 
