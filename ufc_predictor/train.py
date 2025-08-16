@@ -76,7 +76,43 @@ def train(
         )
         raise SystemExit(1)
 
-    X = fight_stats[columnas_X]
+    # Normalizar nombres de columnas para empatar con los de ``fight_stats``.
+    def _sanitize(name: str) -> str:
+        return name.lower().replace(" ", "_").replace(".", "").replace("/", "_")
+
+    columnas_procesadas: list[str] = []
+    faltantes: list[str] = []
+    for col in columnas_X:
+        if col in fight_stats.columns:
+            columnas_procesadas.append(col)
+            continue
+        sanitized = _sanitize(col)
+        # Intentar emparejar con versión normalizada
+        if sanitized in fight_stats.columns:
+            columnas_procesadas.append(sanitized)
+        else:
+            faltantes.append(col)
+
+    if faltantes:
+        print(
+            "⚠️ Las siguientes columnas no se encontraron y serán ignoradas:",
+            ", ".join(faltantes),
+        )
+
+    if not columnas_procesadas:
+        raise SystemExit("No se pudieron alinear columnas para entrenamiento")
+
+    X = fight_stats[columnas_procesadas]
+    # Elimina columnas no numéricas que provocarían errores en los modelos
+    no_numericas = X.select_dtypes(exclude="number").columns.tolist()
+    if no_numericas:
+        print(
+            "⚠️ Las siguientes columnas son no numéricas y se descartarán:",
+            ", ".join(no_numericas),
+        )
+        X = X.drop(columns=no_numericas)
+        columnas_procesadas = [c for c in columnas_procesadas if c not in no_numericas]
+
     y = fight_stats[target_column]
 
     if models is None:
