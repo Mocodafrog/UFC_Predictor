@@ -41,12 +41,13 @@ def test_train_split_deterministic(tmp_path, monkeypatch):
     X = pd.DataFrame({"feat": range(12)})
     y = [0, 1] * 6
 
-    train_module.X = X
-    train_module.fight_stats = X.assign(Winner=y)
-    train_module.models = {
+    fight_stats = X.assign(Winner=y)
+    fight_stats.to_csv(tmp_path / "fight_stats.csv", index=False)
+    pd.Series(["feat"]).to_csv(tmp_path / "columnas_X.csv", index=False, header=False)
+
+    models = {
         "LogReg": (LogisticRegression(random_state=train_module.RANDOM_STATE), {})
     }
-    train_module.MODELS_DIR = tmp_path
 
     monkeypatch.setattr(train_module.joblib, "dump", lambda *args, **kwargs: None)
     monkeypatch.setattr(train_module, "GridSearchCV", DummyGridSearchCV)
@@ -62,8 +63,8 @@ def test_train_split_deterministic(tmp_path, monkeypatch):
 
     monkeypatch.setattr(train_module, "train_test_split", record_split)
 
-    train("Winner")
-    train("Winner")
+    train("Winner", data_dir=str(tmp_path), models_dir=str(tmp_path), models=models)
+    train("Winner", data_dir=str(tmp_path), models_dir=str(tmp_path), models=models)
 
     (X_train1, X_test1, y_train1, y_test1), (X_train2, X_test2, y_train2, y_test2) = splits
 
