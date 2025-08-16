@@ -29,11 +29,11 @@ jobs:
 
     - name: Scrape fight stats
       run: |
-        python -c "from scraping import scrape_fight_stats; scrape_fight_stats()"
+        python -c "from ufc_predictor.scraping import scrape_fight_stats; scrape_fight_stats()"
 
     - name: Generate fight statistics
       run: |
-        python fight_stats.py
+        python -m ufc_predictor.fight_stats
 
     - name: Configurar git para commit
       run: |
