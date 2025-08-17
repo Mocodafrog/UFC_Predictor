@@ -19,6 +19,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.svm import SVC
+from sklearn.preprocessing import LabelEncoder
 
 from ufc_predictor.config import MODEL_VERSION
 
@@ -114,6 +115,10 @@ def train(
         columnas_procesadas = [c for c in columnas_procesadas if c not in no_numericas]
 
     y = fight_stats[target_column]
+    target_suffix = target_column.lower()
+    encoder = LabelEncoder()
+    y = pd.Series(encoder.fit_transform(y), index=fight_stats.index, name=target_column)
+    joblib.dump(encoder, os.path.join(models_dir, f"label_encoder_{target_suffix}.pkl"))
 
     if models is None:
         from lightgbm import LGBMClassifier
@@ -174,7 +179,6 @@ def train(
     cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
     mejores = []
     print(f"\n📊 Iniciando entrenamiento para {target_column.upper()}\n")
-    target_suffix = target_column.lower()
     for nombre, (modelo, params) in models.items():
         print(f"⚙️ GridSearch para {nombre}...")
         grid = GridSearchCV(
