@@ -124,9 +124,6 @@ def train(
     y = fight_stats[target_column]
     encoder = LabelEncoder()
     y = pd.Series(encoder.fit_transform(y), name=target_column)
-    min_clase = y.value_counts().min()
-    target_suffix = target_column.lower()
-
 
     if models is None:
         from lightgbm import LGBMClassifier
