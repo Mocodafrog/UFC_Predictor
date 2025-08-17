@@ -122,7 +122,14 @@ def train(
         columnas_procesadas = [c for c in columnas_procesadas if c not in no_numericas]
 
     y = fight_stats[target_column]
-
+    encoder = LabelEncoder()
+    y = pd.Series(encoder.fit_transform(y), name=target_column)
+    joblib.dump(
+        encoder,
+        os.path.join(models_dir, f"label_encoder_{target_column.lower()}.pkl"),
+    )
+    target_suffix = target_column.lower()
+    min_clase = y.value_counts().min()
 
     if models is None:
         from lightgbm import LGBMClassifier
