@@ -19,6 +19,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.svm import SVC
+from sklearn.preprocessing import LabelEncoder
 
 from ufc_predictor.config import MODEL_VERSION
 
@@ -121,9 +122,7 @@ def train(
         columnas_procesadas = [c for c in columnas_procesadas if c not in no_numericas]
 
     y = fight_stats[target_column]
-    min_clase = y.value_counts().min()
-    # StratifiedKFold requiere al menos ``min_clase`` muestras por clase;
-    # añade más datos si alguna clase tiene menos.
+
 
     if models is None:
         from lightgbm import LGBMClassifier
@@ -185,7 +184,6 @@ def train(
     cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=RANDOM_STATE)
     mejores = []
     print(f"\n📊 Iniciando entrenamiento para {target_column.upper()}\n")
-    target_suffix = target_column.lower()
     for nombre, (modelo, params) in models.items():
         print(f"⚙️ GridSearch para {nombre}...")
         grid = GridSearchCV(
