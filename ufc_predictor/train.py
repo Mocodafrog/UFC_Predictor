@@ -49,6 +49,13 @@ def train(
         Diccionario opcional con los modelos a entrenar. Si no se provee se
         utilizan los modelos por defecto y se importan las dependencias
         pesadas dentro de esta función.
+
+    Notes
+    -----
+    Se requiere al menos ``min(3, min_clase)`` muestras por clase para la
+    validación estratificada donde ``min_clase`` es la cantidad mínima de
+    ejemplos por clase en ``y``. Si alguna clase tiene menos ejemplos,
+    aumenta los datos de entrenamiento.
     """
 
     if models_dir is None:
@@ -115,10 +122,7 @@ def train(
         columnas_procesadas = [c for c in columnas_procesadas if c not in no_numericas]
 
     y = fight_stats[target_column]
-    target_suffix = target_column.lower()
-    encoder = LabelEncoder()
-    y = pd.Series(encoder.fit_transform(y), index=fight_stats.index, name=target_column)
-    joblib.dump(encoder, os.path.join(models_dir, f"label_encoder_{target_suffix}.pkl"))
+
 
     if models is None:
         from lightgbm import LGBMClassifier
@@ -175,8 +179,9 @@ def train(
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=RANDOM_STATE
     )
-
-    cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=RANDOM_STATE)
+    n_splits = min(3, min_clase)
+    # Se requieren al menos ``n_splits`` muestras por clase o debes aumentar los datos.
+    cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=RANDOM_STATE)
     mejores = []
     print(f"\n📊 Iniciando entrenamiento para {target_column.upper()}\n")
     for nombre, (modelo, params) in models.items():
