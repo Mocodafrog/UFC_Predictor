@@ -10,6 +10,8 @@ on:
 jobs:
   entrenamiento:
     runs-on: ubuntu-latest
+    env:
+      MODEL_NAMES: XGBoost,LightGBM
 
     steps:
     - name: Checkout repo

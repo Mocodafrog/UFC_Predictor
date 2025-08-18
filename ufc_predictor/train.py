@@ -33,6 +33,7 @@ def train(
     data_dir: str = DATA_DIR,
     models_dir: str | None = None,
     models: dict | None = None,
+    model_names: list[str] | None = None,
 ) -> None:
     """Entrena modelos base y un stacking final para ``target_column``.
 
@@ -49,6 +50,10 @@ def train(
         Diccionario opcional con los modelos a entrenar. Si no se provee se
         utilizan los modelos por defecto y se importan las dependencias
         pesadas dentro de esta función.
+    model_names:
+        Lista opcional con los nombres de modelos a ejecutar. Los nombres
+        deben coincidir con las claves del diccionario ``models``. Si es
+        ``None`` se entrenan todos los modelos disponibles.
 
     Notes
     -----
@@ -186,6 +191,12 @@ def train(
                 {"C": [0.1, 1, 10], "kernel": ["linear", "rbf"]},
             ),
         }
+
+    if model_names:
+        nombres = {n.lower() for n in model_names}
+        models = {k: v for k, v in models.items() if k.lower() in nombres}
+        if not models:
+            raise SystemExit("No se encontraron modelos válidos en model_names")
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=RANDOM_STATE
