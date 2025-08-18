@@ -136,31 +136,35 @@ def train(
         from xgboost import XGBClassifier
         from catboost import CatBoostClassifier
 
+        # Hyperparameter grids are intentionally small to keep CI runtime low.  With
+        # ``n_splits=3`` the largest grid below yields <50 fits.  For thorough
+        # experiments, expand these ranges offline (e.g. include more
+        # ``learning_rate`` values or deeper ``max_depth``).
         models = {
             "XGBoost": (
                 XGBClassifier(random_state=RANDOM_STATE),
                 {
-                    "learning_rate": [0.01, 0.1],
-                    "n_estimators": [100, 200],
-                    "max_depth": [3, 5, 7],
+                    "learning_rate": [0.1],
+                    "n_estimators": [50, 100],
+                    "max_depth": [3, 5],
                 },
             ),
             "LightGBM": (
                 LGBMClassifier(random_state=RANDOM_STATE),
                 {
-                    "learning_rate": [0.01, 0.1],
-                    "n_estimators": [100, 200],
-                    "max_depth": [3, 5, 7],
+                    "learning_rate": [0.1],
+                    "n_estimators": [50, 100],
+                    "max_depth": [3, 5],
                 },
             ),
             "CatBoost": (
                 CatBoostClassifier(verbose=0, random_state=RANDOM_STATE),
-                {"learning_rate": [0.01, 0.1], "iterations": [100, 200]},
+                {"learning_rate": [0.1], "iterations": [50, 100]},
             ),
             "RandomForest": (
                 RandomForestClassifier(random_state=RANDOM_STATE),
                 {
-                    "n_estimators": [100, 200],
+                    "n_estimators": [50, 100],
                     "max_depth": [10, 20],
                     "min_samples_split": [2, 5],
                 },
@@ -168,9 +172,9 @@ def train(
             "GradientBoosting": (
                 GradientBoostingClassifier(random_state=RANDOM_STATE),
                 {
-                    "learning_rate": [0.01, 0.1],
-                    "n_estimators": [100, 200],
-                    "max_depth": [3, 5, 7],
+                    "learning_rate": [0.1],
+                    "n_estimators": [50, 100],
+                    "max_depth": [3, 5],
                 },
             ),
             "LogisticRegression": (
