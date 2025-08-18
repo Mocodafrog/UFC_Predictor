@@ -97,6 +97,15 @@ Para entrenar el modelo del ganador del combate:
 python entrenamiento_winner.py
 ```
 
+### Ajustes rápidos en CI
+
+Para acelerar la integración continua, los grids de hiperparámetros en
+`ufc_predictor/train.py` usan valores reducidos.  Por ejemplo,
+`n_estimators` se limita a `[50, 100]`, `max_depth` a `[3, 5]` y
+`learning_rate` queda fijo en `0.1`, lo que implica menos de 50 "fits" por
+modelo con validación cruzada de 3 pliegues.  Realiza la búsqueda completa
+fuera del entorno de CI ampliando estas combinaciones.
+
 ## 📊 Agregación vs Dataset Rolling
 
 - `ufc_predictor.analysis.aggregate_last_five_stats`: produce un único registro por
