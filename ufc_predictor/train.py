@@ -34,6 +34,7 @@ def train(
     models_dir: str | None = None,
     models: dict | None = None,
     model_names: list[str] | None = None,
+    fast_mode: bool = False,
 ) -> None:
     """Entrena modelos base y un stacking final para ``target_column``.
 
@@ -54,13 +55,19 @@ def train(
         Lista opcional con los nombres de modelos a ejecutar. Los nombres
         deben coincidir con las claves del diccionario ``models``. Si es
         ``None`` se entrenan todos los modelos disponibles.
+    fast_mode:
+        Si es ``True`` se ejecuta un entrenamiento reducido pensado para
+        ejecuciones rápidas: solo se entrenan modelos livianos con un
+        único conjunto de hiperparámetros, se usa una fracción pequeña de
+        los datos y la validación cruzada utiliza dos particiones.
 
     Notes
     -----
     Se requiere al menos ``min(3, min_clase)`` muestras por clase para la
-    validación estratificada donde ``min_clase`` es la cantidad mínima de
-    ejemplos por clase en ``y``. Si alguna clase tiene menos ejemplos,
-    aumenta los datos de entrenamiento.
+    validación estratificada (``min(2, min_clase)`` si se activa
+    ``fast_mode``) donde ``min_clase`` es la cantidad mínima de ejemplos por
+    clase en ``y``. Si alguna clase tiene menos ejemplos, aumenta los datos de
+    entrenamiento.
     """
 
     if models_dir is None:
@@ -134,63 +141,85 @@ def train(
         os.path.join(models_dir, f"label_encoder_{target_column.lower()}.pkl"),
     )
     target_suffix = target_column.lower()
+
+    if fast_mode:
+        X = X.sample(frac=0.1, random_state=RANDOM_STATE)
+        y = y.loc[X.index]
+
     min_clase = y.value_counts().min()
 
-    if models is None:
-        from lightgbm import LGBMClassifier
-        from xgboost import XGBClassifier
-        from catboost import CatBoostClassifier
+    if models is None or fast_mode:
+        if fast_mode:
+            models = {
+                "RandomForest": (
+                    RandomForestClassifier(random_state=RANDOM_STATE),
+                    {
+                        "n_estimators": [50],
+                        "max_depth": [10],
+                        "min_samples_split": [2],
+                    },
+                ),
+                "LogisticRegression": (
+                    LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
+                    {"C": [1], "solver": ["lbfgs"]},
+                ),
+            }
+            model_names = ["LogisticRegression", "RandomForest"]
+        else:
+            from lightgbm import LGBMClassifier
+            from xgboost import XGBClassifier
+            from catboost import CatBoostClassifier
 
-        # Hyperparameter grids are intentionally small to keep CI runtime low.  With
-        # ``n_splits=3`` the largest grid below yields <50 fits.  For thorough
-        # experiments, expand these ranges offline (e.g. include more
-        # ``learning_rate`` values or deeper ``max_depth``).
-        models = {
-            "XGBoost": (
-                XGBClassifier(random_state=RANDOM_STATE),
-                {
-                    "learning_rate": [0.1],
-                    "n_estimators": [50, 100],
-                    "max_depth": [3, 5],
-                },
-            ),
-            "LightGBM": (
-                LGBMClassifier(random_state=RANDOM_STATE),
-                {
-                    "learning_rate": [0.1],
-                    "n_estimators": [50, 100],
-                    "max_depth": [3, 5],
-                },
-            ),
-            "CatBoost": (
-                CatBoostClassifier(verbose=0, random_state=RANDOM_STATE),
-                {"learning_rate": [0.1], "iterations": [50, 100]},
-            ),
-            "RandomForest": (
-                RandomForestClassifier(random_state=RANDOM_STATE),
-                {
-                    "n_estimators": [50, 100],
-                    "max_depth": [10, 20],
-                    "min_samples_split": [2, 5],
-                },
-            ),
-            "GradientBoosting": (
-                GradientBoostingClassifier(random_state=RANDOM_STATE),
-                {
-                    "learning_rate": [0.1],
-                    "n_estimators": [50, 100],
-                    "max_depth": [3, 5],
-                },
-            ),
-            "LogisticRegression": (
-                LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
-                {"C": [0.1, 1, 10], "solver": ["lbfgs", "liblinear"]},
-            ),
-            "SVC": (
-                SVC(probability=True, random_state=RANDOM_STATE),
-                {"C": [0.1, 1, 10], "kernel": ["linear", "rbf"]},
-            ),
-        }
+            # Hyperparameter grids are intentionally small to keep CI runtime low.  With
+            # ``n_splits=3`` the largest grid below yields <50 fits.  For thorough
+            # experiments, expand these ranges offline (e.g. include more
+            # ``learning_rate`` values or deeper ``max_depth``).
+            models = {
+                "XGBoost": (
+                    XGBClassifier(random_state=RANDOM_STATE),
+                    {
+                        "learning_rate": [0.1],
+                        "n_estimators": [50, 100],
+                        "max_depth": [3, 5],
+                    },
+                ),
+                "LightGBM": (
+                    LGBMClassifier(random_state=RANDOM_STATE),
+                    {
+                        "learning_rate": [0.1],
+                        "n_estimators": [50, 100],
+                        "max_depth": [3, 5],
+                    },
+                ),
+                "CatBoost": (
+                    CatBoostClassifier(verbose=0, random_state=RANDOM_STATE),
+                    {"learning_rate": [0.1], "iterations": [50, 100]},
+                ),
+                "RandomForest": (
+                    RandomForestClassifier(random_state=RANDOM_STATE),
+                    {
+                        "n_estimators": [50, 100],
+                        "max_depth": [10, 20],
+                        "min_samples_split": [2, 5],
+                    },
+                ),
+                "GradientBoosting": (
+                    GradientBoostingClassifier(random_state=RANDOM_STATE),
+                    {
+                        "learning_rate": [0.1],
+                        "n_estimators": [50, 100],
+                        "max_depth": [3, 5],
+                    },
+                ),
+                "LogisticRegression": (
+                    LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
+                    {"C": [0.1, 1, 10], "solver": ["lbfgs", "liblinear"]},
+                ),
+                "SVC": (
+                    SVC(probability=True, random_state=RANDOM_STATE),
+                    {"C": [0.1, 1, 10], "kernel": ["linear", "rbf"]},
+                ),
+            }
 
     if model_names:
         nombres = {n.lower() for n in model_names}
@@ -201,7 +230,7 @@ def train(
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=RANDOM_STATE
     )
-    n_splits = min(3, min_clase)
+    n_splits = min(2 if fast_mode else 3, min_clase)
     # Se requieren al menos ``n_splits`` muestras por clase o debes aumentar los datos.
     cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=RANDOM_STATE)
     mejores = []
