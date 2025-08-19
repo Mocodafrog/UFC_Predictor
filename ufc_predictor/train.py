@@ -17,7 +17,7 @@ import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, StratifiedKFold, train_test_split
 from sklearn.svm import SVC
 from sklearn.preprocessing import LabelEncoder
 
@@ -34,6 +34,7 @@ def train(
     models_dir: str | None = None,
     models: dict | None = None,
     model_names: list[str] | None = None,
+    use_randomized_search: bool = False,
 ) -> None:
     """Entrena modelos base y un stacking final para ``target_column``.
 
@@ -54,6 +55,9 @@ def train(
         Lista opcional con los nombres de modelos a ejecutar. Los nombres
         deben coincidir con las claves del diccionario ``models``. Si es
         ``None`` se entrenan todos los modelos disponibles.
+    use_randomized_search:
+        Si ``True``, utiliza ``RandomizedSearchCV`` en lugar de ``GridSearchCV``
+        con un número reducido de iteraciones para acelerar el entrenamiento.
 
     Notes
     -----
@@ -207,17 +211,30 @@ def train(
     mejores = []
     print(f"\n📊 Iniciando entrenamiento para {target_column.upper()}\n")
     for nombre, (modelo, params) in models.items():
-        print(f"⚙️ GridSearch para {nombre}...")
-        grid = GridSearchCV(
-            modelo, params, cv=cv, scoring="accuracy", verbose=1, n_jobs=-1
-        )
-        grid.fit(X_train, y_train)
+        if use_randomized_search:
+            print(f"⚙️ RandomizedSearch para {nombre}...")
+            search = RandomizedSearchCV(
+                modelo,
+                params,
+                cv=cv,
+                scoring="accuracy",
+                verbose=1,
+                n_jobs=-1,
+                n_iter=10,
+                random_state=RANDOM_STATE,
+            )
+        else:
+            print(f"⚙️ GridSearch para {nombre}...")
+            search = GridSearchCV(
+                modelo, params, cv=cv, scoring="accuracy", verbose=1, n_jobs=-1
+            )
+        search.fit(X_train, y_train)
         joblib.dump(
-            grid.best_estimator_,
+            search.best_estimator_,
             os.path.join(models_dir, f"{nombre.lower()}_{target_suffix}.pkl"),
         )
-        mejores.append((nombre, grid.best_estimator_))
-        print(f"✅ {nombre} mejores parámetros: {grid.best_params_}")
+        mejores.append((nombre, search.best_estimator_))
+        print(f"✅ {nombre} mejores parámetros: {search.best_params_}")
 
     stacking = StackingClassifier(
         estimators=mejores,
