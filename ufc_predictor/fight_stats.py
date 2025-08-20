@@ -112,7 +112,9 @@ if __name__ == "__main__":
     fight_stats.to_csv(DATA_DIR / "fight_stats.csv", index=False)
 
     reduced_cols = [
-
+        "Fighter",
+        "Format",
+        "Weight Class",
         "date",
         "form_last_5",
     ] + [c for c in fight_stats.columns if c.endswith("_rolling_mean")]
