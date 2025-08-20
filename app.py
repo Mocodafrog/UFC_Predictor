@@ -31,23 +31,50 @@ if stacking_winner is None or stacking_method is None:
 
 # Cargar los datos preprocesados
 try:
-    df_estadisticas_ultimos_5 = pd.read_csv('data/df_estadisticas_ultimos_5.csv')
+    fight_stats = pd.read_csv("data/fight_stats.csv")
 except FileNotFoundError:
-    st.error("Archivo de estadísticas no encontrado: data/df_estadisticas_ultimos_5.csv")
+    st.error("Archivo de estadísticas no encontrado: data/fight_stats.csv")
     st.stop()
+
+
+def _sanitize(name: str) -> str:
+    """Normaliza nombres de columnas para facilitar el cruce."""
+    return name.lower().replace(" ", "_").replace(".", "").replace("/", "_")
+
 
 # Asegurarse de que las columnas del modelo se carguen correctamente
 try:
-    columnas_X = pd.read_csv('data/columnas_X.csv', header=None).squeeze().tolist()
+    columnas_X_raw = pd.read_csv("data/columnas_X.csv", header=None).squeeze().tolist()
 except FileNotFoundError:
     st.error("Archivo de columnas no encontrado: data/columnas_X.csv")
     st.stop()
+
+column_map = {_sanitize(col): col for col in fight_stats.columns}
+columnas_X: list[str] = []
+faltantes: list[str] = []
+for col in columnas_X_raw:
+    if col in fight_stats.columns:
+        columnas_X.append(col)
+    else:
+        sanitized = _sanitize(col)
+        if sanitized in column_map:
+            columnas_X.append(column_map[sanitized])
+        else:
+            faltantes.append(col)
+
+if faltantes:
+    st.warning(f"Columnas ignoradas por no existir en datos: {faltantes}")
+
+no_numericas = fight_stats[columnas_X].select_dtypes(exclude="number").columns.tolist()
+if no_numericas:
+    st.warning(f"Columnas no numéricas ignoradas: {no_numericas}")
+    columnas_X = [c for c in columnas_X if c not in no_numericas]
 
 # Título de la app
 st.title('Predicción de Resultados de Peleas de UFC')
 
 # Selección de peleadores de la lista desplegable (completado automático)
-fighters_list = df_estadisticas_ultimos_5['Fighter'].unique()
+fighters_list = fight_stats["Fighter"].unique()
 
 # Selección de peleadores de la lista desplegable
 fighter_1 = st.selectbox('Selecciona el primer peleador:', fighters_list, key='fighter_1')
@@ -59,8 +86,16 @@ if duplicate_selection:
     st.warning('Debes seleccionar dos peleadores distintos.')
 
 # Obtener las estadísticas de los peleadores
-stats_fighter_1 = df_estadisticas_ultimos_5[df_estadisticas_ultimos_5['Fighter'] == fighter_1].drop(columns=['Fighter'])
-stats_fighter_2 = df_estadisticas_ultimos_5[df_estadisticas_ultimos_5['Fighter'] == fighter_2].drop(columns=['Fighter'])
+stats_fighter_1 = (
+    fight_stats[fight_stats["Fighter"] == fighter_1]
+    .sort_values("date", ascending=False)
+    .head(1)
+)
+stats_fighter_2 = (
+    fight_stats[fight_stats["Fighter"] == fighter_2]
+    .sort_values("date", ascending=False)
+    .head(1)
+)
 
 if stats_fighter_1.empty or stats_fighter_2.empty:
     st.error("No se encontraron estadísticas para uno o ambos peleadores.")
@@ -79,20 +114,8 @@ else:
     st.write(f"Forma últimos 5 de {fighter_1}: {form_last_5_fighter_1}")
     st.write(f"Forma últimos 5 de {fighter_2}: {form_last_5_fighter_2}")
 
-    # Asegurarse de que las columnas estén en el orden correcto
-    try:
-        stats_fighter_1 = stats_fighter_1[columnas_X]
-    except KeyError:
-        missing_cols = [col for col in columnas_X if col not in stats_fighter_1.columns]
-        st.error(f"Columnas faltantes en las estadísticas de {fighter_1}: {missing_cols}")
-        st.stop()
-
-    try:
-        stats_fighter_2 = stats_fighter_2[columnas_X]
-    except KeyError:
-        missing_cols = [col for col in columnas_X if col not in stats_fighter_2.columns]
-        st.error(f"Columnas faltantes en las estadísticas de {fighter_2}: {missing_cols}")
-        st.stop()
+    stats_features_1 = stats_fighter_1[columnas_X]
+    stats_features_2 = stats_fighter_2[columnas_X]
 
     # Función para hacer la predicción del ganador
     def hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2):
@@ -132,5 +155,5 @@ else:
 
     # Botón para hacer la predicción
     if st.button('Hacer Predicción', disabled=duplicate_selection):
-        hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2)
-        hacer_prediccion_method(stacking_method, stats_fighter_1, stats_fighter_2)
+        hacer_prediccion_winner(stacking_winner, stats_features_1, stats_features_2, fighter_1, fighter_2)
+        hacer_prediccion_method(stacking_method, stats_features_1, stats_features_2)
