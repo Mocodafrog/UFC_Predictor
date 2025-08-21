@@ -104,6 +104,25 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
         df[col_name] = df[f"landed_{base}"] / fight_length_min
         lpm_cols.append(col_name)
 
+    # Compute accuracy for landed versus attempted metrics
+    acc_bases = [
+        "sig_str",
+        "total_str",
+        "td",
+        "head",
+        "body",
+        "leg",
+        "distance",
+        "clinch",
+        "ground",
+    ]
+    for base in acc_bases:
+        df[f"{base}_acc"] = (
+            df[f"landed_{base}"]
+            .div(df[f"atmp_{base}"].replace(0, pd.NA))
+            .fillna(0)
+        )
+
     # Columns for which we will compute rolling means
     rolling_cols = [
         "KD",
@@ -116,6 +135,7 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
         base = col.lower().replace(" ", "_").replace(".", "")
         rolling_cols.extend([f"landed_{base}", f"atmp_{base}"])
     rolling_cols.extend(lpm_cols)
+    rolling_cols.extend([f"{b}_acc" for b in acc_bases])
 
     for col in rolling_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
