@@ -78,6 +78,24 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
         df[f"landed_{base}"] = landed
         df[f"atmp_{base}"] = atmp
 
+    # Compute landed strikes per minute for selected categories
+    fight_length_min = df["Total_fight_length_sec"].replace(0, pd.NA) / 60
+    lpm_bases = [
+        "sig_str",
+        "total_str",
+        "head",
+        "body",
+        "leg",
+        "distance",
+        "clinch",
+        "ground",
+    ]
+    lpm_cols: list[str] = []
+    for base in lpm_bases:
+        col_name = f"{base}_lpm"
+        df[col_name] = df[f"landed_{base}"] / fight_length_min
+        lpm_cols.append(col_name)
+
     # Columns for which we will compute rolling means
     rolling_cols = [
         "KD",
@@ -89,6 +107,7 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
     for col in pair_cols:
         base = col.lower().replace(" ", "_").replace(".", "")
         rolling_cols.extend([f"landed_{base}", f"atmp_{base}"])
+    rolling_cols.extend(lpm_cols)
 
     for col in rolling_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
