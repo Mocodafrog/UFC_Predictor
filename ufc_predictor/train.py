@@ -122,6 +122,19 @@ def train(
     if not columnas_procesadas:
         raise SystemExit("No se pudieron alinear columnas para entrenamiento")
 
+    if "Rounds" in fight_stats.columns:
+        fight_stats["Rounds"] = pd.to_numeric(
+            fight_stats["Rounds"], errors="coerce"
+        )
+    if "Format" in fight_stats.columns:
+        fight_stats["Format"] = (
+            fight_stats["Format"].str.extract(r"(\d+)").astype(float)
+        )
+    if "Weight Class" in fight_stats.columns:
+        fight_stats["Weight Class"] = pd.Categorical(
+            fight_stats["Weight Class"]
+        ).codes
+
     X = fight_stats[columnas_procesadas]
     # Elimina columnas no numéricas que provocarían errores en los modelos
     no_numericas = X.select_dtypes(exclude="number").columns.tolist()
