@@ -77,10 +77,36 @@ for col in columnas_X_raw:
 if faltantes:
     st.warning(f"Columnas ignoradas por no existir en datos: {faltantes}")
 
+# Replicar preprocesamiento utilizado durante el entrenamiento
+weight_class_mapping: dict[str, int] = {}
+if "Rounds" in fight_stats.columns:
+    fight_stats["Rounds"] = pd.to_numeric(
+        fight_stats["Rounds"], errors="coerce"
+    )
+if "Format" in fight_stats.columns:
+    fight_stats["Format"] = (
+        fight_stats["Format"].str.extract(r"(\d+)").astype(float)
+    )
+if "Weight Class" in fight_stats.columns:
+    weight_class_cat = pd.Categorical(fight_stats["Weight Class"])
+    weight_class_mapping = {
+        cat: code for code, cat in enumerate(weight_class_cat.categories)
+    }
+    fight_stats["Weight Class"] = weight_class_cat.codes
+
+# Detectar columnas no numéricas tras el preprocesamiento
 no_numericas = fight_stats[columnas_X].select_dtypes(exclude="number").columns.tolist()
 if no_numericas:
     st.warning(f"Columnas no numéricas ignoradas: {no_numericas}")
     columnas_X = [c for c in columnas_X if c not in no_numericas]
+
+# Verificar que columnas críticas se mantengan en columnas_X
+critical_cols = [
+    c for c in ["Rounds", "Format", "Weight Class"] if c in fight_stats.columns
+]
+missing_critical = [c for c in critical_cols if c not in columnas_X]
+if missing_critical:
+    st.warning(f"Columnas no incluidas en columnas_X: {missing_critical}")
 
 # Título de la app
 st.title('Predicción de Resultados de Peleas de UFC')
@@ -156,16 +182,27 @@ else:
     st.write(f"Forma últimos 5 de {fighter_1}: {form_last_5_fighter_1}")
     st.write(f"Forma últimos 5 de {fighter_2}: {form_last_5_fighter_2}")
 
-    stats_features_1 = stats_fighter_1[columnas_X]
-    stats_features_2 = stats_fighter_2[columnas_X]
+    stats_features_1 = stats_fighter_1[columnas_X].copy()
+    stats_features_2 = stats_fighter_2[columnas_X].copy()
 
-    # Incluir formato y categoría de peso en el modelo si se utilizan
+    # Convertir entradas del usuario al mismo código utilizado en el entrenamiento
     if "Format" in stats_features_1.columns:
-        stats_features_1["Format"] = format_input
-        stats_features_2["Format"] = format_input
+        format_input_code = (
+            pd.Series([format_input]).str.extract(r"(\d+)").astype(float).iloc[0]
+        )
+        stats_features_1["Format"] = format_input_code
+        stats_features_2["Format"] = format_input_code
     if "Weight Class" in stats_features_1.columns:
-        stats_features_1["Weight Class"] = weight_class_input
-        stats_features_2["Weight Class"] = weight_class_input
+        weight_class_input_code = weight_class_mapping.get(weight_class_input, -1)
+        stats_features_1["Weight Class"] = weight_class_input_code
+        stats_features_2["Weight Class"] = weight_class_input_code
+
+    # Verificar que las dimensiones coinciden con las esperadas por el modelo
+    if stats_features_1.shape[1] != len(columnas_X) or stats_features_2.shape[1] != len(columnas_X):
+        st.error(
+            "Las columnas de las estadísticas no coinciden con las utilizadas en el modelo."
+        )
+        st.stop()
 
     # Función para hacer la predicción del ganador
     def hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2):
