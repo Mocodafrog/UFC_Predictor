@@ -32,7 +32,10 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
 
     This routine keeps one row per bout and appends rolling averages for
     numerous statistics as well as a ``form_last_5`` column with the number of
-    recent wins. For a per-fighter aggregated summary, see
+    recent wins. After the metrics are created the resulting DataFrame is
+    written to ``data/fight_stats.csv`` and a reduced dataset containing the
+    rolling means is exported to ``data/df_estadisticas_ultimos_5.csv``.
+    For a per-fighter aggregated summary, see
     :func:`ufc_predictor.analysis.aggregate_last_five_stats`.
 
     If ``csv_path`` does not exist, an empty :class:`~pandas.DataFrame` is
@@ -99,6 +102,20 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
             .reset_index(level=0, drop=True)
         )
 
+    # Persist the full dataset and a reduced version with only rolling means
+    DATA_DIR.mkdir(exist_ok=True)
+    df.to_csv(DATA_DIR / "fight_stats.csv", index=False)
+
+    reduced_cols = [
+        "Fighter",
+        "Format",
+        "Weight Class",
+        "date",
+        "form_last_5",
+    ] + [c for c in df.columns if c.endswith("_rolling_mean")]
+    reduced = df[reduced_cols]
+    reduced.to_csv(DATA_DIR / "df_estadisticas_ultimos_5.csv", index=False)
+
     return df
 
 
@@ -107,16 +124,3 @@ if __name__ == "__main__":
     if fight_stats.empty:
         print("No stats generated; skipping export.")
         raise SystemExit(1)
-
-    DATA_DIR.mkdir(exist_ok=True)
-    fight_stats.to_csv(DATA_DIR / "fight_stats.csv", index=False)
-
-    reduced_cols = [
-        "Fighter",
-        "Format",
-        "Weight Class",
-        "date",
-        "form_last_5",
-    ] + [c for c in fight_stats.columns if c.endswith("_rolling_mean")]
-    reduced = fight_stats[reduced_cols]
-    reduced.to_csv(DATA_DIR / "df_estadisticas_ultimos_5.csv", index=False)
