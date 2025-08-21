@@ -23,10 +23,22 @@ def load_stacking_method(version: str):
         return None
 
 
+@st.cache_resource(show_spinner="Cargando codificador del método...")
+def load_label_encoder_method(version: str):
+    try:
+        return joblib.load(f"models/{version}/label_encoder_method.pkl")
+    except FileNotFoundError:
+        st.error(
+            f"No se encontró el codificador: models/{version}/label_encoder_method.pkl"
+        )
+        return None
+
+
 # Cargar los modelos entrenados
 stacking_winner = load_stacking_winner(MODEL_VERSION)
 stacking_method = load_stacking_method(MODEL_VERSION)
-if stacking_winner is None or stacking_method is None:
+label_encoder_method = load_label_encoder_method(MODEL_VERSION)
+if stacking_winner is None or stacking_method is None or label_encoder_method is None:
     st.stop()
 
 # Cargar los datos preprocesados
@@ -141,19 +153,29 @@ else:
             st.error("Error: la suma de probabilidades es 0, se omite la normalización.")
 
     # Función para hacer la predicción del método de pelea
-    def hacer_prediccion_method(stacking_method, stats_fighter_1, stats_fighter_2):
+    def hacer_prediccion_method(
+        stacking_method, label_encoder_method, stats_fighter_1, stats_fighter_2
+    ):
         # Realizar la predicción para ambos peleadores
         pred_method_fighter_1 = stacking_method.predict(stats_fighter_1)
         pred_method_fighter_2 = stacking_method.predict(stats_fighter_2)
 
-        # Mapear los métodos
-        method_mapping = {0: 'Decision', 1: 'KO/TKO', 2: 'Submission'}
+        method_fighter_1 = label_encoder_method.inverse_transform(
+            pred_method_fighter_1
+        )[0]
+        method_fighter_2 = label_encoder_method.inverse_transform(
+            pred_method_fighter_2
+        )[0]
 
         st.write("\n--- Resultados de la Predicción del Método de Pelea ---")
-        st.write(f"Método predicho para {fighter_1}: {method_mapping[pred_method_fighter_1[0]]}")
-        st.write(f"Método predicho para {fighter_2}: {method_mapping[pred_method_fighter_2[0]]}")
+        st.write(f"Método predicho para {fighter_1}: {method_fighter_1}")
+        st.write(f"Método predicho para {fighter_2}: {method_fighter_2}")
 
     # Botón para hacer la predicción
     if st.button('Hacer Predicción', disabled=duplicate_selection):
-        hacer_prediccion_winner(stacking_winner, stats_features_1, stats_features_2, fighter_1, fighter_2)
-        hacer_prediccion_method(stacking_method, stats_features_1, stats_features_2)
+        hacer_prediccion_winner(
+            stacking_winner, stats_features_1, stats_features_2, fighter_1, fighter_2
+        )
+        hacer_prediccion_method(
+            stacking_method, label_encoder_method, stats_features_1, stats_features_2
+        )
