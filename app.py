@@ -156,8 +156,8 @@ else:
     st.write(f"Forma últimos 5 de {fighter_1}: {form_last_5_fighter_1}")
     st.write(f"Forma últimos 5 de {fighter_2}: {form_last_5_fighter_2}")
 
-    stats_features_1 = stats_fighter_1[columnas_X]
-    stats_features_2 = stats_fighter_2[columnas_X]
+    stats_features_1 = stats_fighter_1[columnas_X].copy()
+    stats_features_2 = stats_fighter_2[columnas_X].copy()
 
     # Incluir formato y categoría de peso en el modelo si se utilizan
     if "Format" in stats_features_1.columns:
@@ -166,6 +166,13 @@ else:
     if "Weight Class" in stats_features_1.columns:
         stats_features_1["Weight Class"] = weight_class_input
         stats_features_2["Weight Class"] = weight_class_input
+
+    # Verificar que las columnas coincidan con las esperadas por el modelo
+    if stats_features_1.columns.tolist() != columnas_X:
+        st.error(
+            "Las columnas de las características no coinciden con las esperadas por el modelo."
+        )
+        st.stop()
 
     # Función para hacer la predicción del ganador
     def hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2):
