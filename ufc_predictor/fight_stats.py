@@ -78,6 +78,16 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
         df[f"landed_{base}"] = landed
         df[f"atmp_{base}"] = atmp
 
+    # Accuracy metrics for striking categories
+    df["sig_str_acc"] = df["landed_sig_str"] / df["atmp_sig_str"].replace(0, 1)
+    df["total_str_acc"] = df["landed_total_str"] / df["atmp_total_str"].replace(0, 1)
+    df["head_acc"] = df["landed_head"] / df["atmp_head"].replace(0, 1)
+    df["body_acc"] = df["landed_body"] / df["atmp_body"].replace(0, 1)
+    df["leg_acc"] = df["landed_leg"] / df["atmp_leg"].replace(0, 1)
+    df["distance_acc"] = df["landed_distance"] / df["atmp_distance"].replace(0, 1)
+    df["clinch_acc"] = df["landed_clinch"] / df["atmp_clinch"].replace(0, 1)
+    df["ground_acc"] = df["landed_ground"] / df["atmp_ground"].replace(0, 1)
+
     # Columns for which we will compute rolling means
     rolling_cols = [
         "KD",
