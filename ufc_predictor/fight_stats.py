@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Optional
+
 import pandas as pd
 
 DATA_DIR = Path("data")
@@ -27,7 +29,10 @@ def _time_to_seconds(text: str) -> int:
     return 0
 
 
-def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.csv") -> pd.DataFrame:
+def compute_last_five_stats(
+    csv_path: str | Path = DATA_DIR / "fight_stats_raw.csv",
+    profiles_path: Optional[str | Path] = DATA_DIR / "fighters.csv",
+) -> pd.DataFrame:
     """Generate a rolling dataset for the last five fights of each fighter.
 
     This routine keeps one row per bout and appends rolling averages for
@@ -99,6 +104,34 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
             .reset_index(level=0, drop=True)
         )
 
+    # Merge fighter physical data if available
+    if profiles_path and Path(profiles_path).exists():
+        profiles = pd.read_csv(profiles_path)
+        profiles["birthdate"] = pd.to_datetime(profiles["birthdate"], errors="coerce")
+        df = df.merge(
+            profiles[
+                [
+                    "full_name",
+                    "height_cm",
+                    "reach_cm",
+                    "stance",
+                    "birthdate",
+                ]
+            ],
+            left_on="Fighter",
+            right_on="full_name",
+            how="left",
+        )
+        fight_dates = pd.to_datetime(df.get("date"), errors="coerce")
+        df["age_at_fight_days"] = (fight_dates - df["birthdate"]).dt.days
+        df.drop(columns=["full_name", "birthdate"], inplace=True)
+        df["height_cm"] = pd.to_numeric(df["height_cm"], errors="coerce").fillna(0)
+        df["reach_cm"] = pd.to_numeric(df["reach_cm"], errors="coerce").fillna(0)
+        df["stance"] = df["stance"].fillna("Unknown")
+        df["age_at_fight_days"] = (
+            pd.to_numeric(df["age_at_fight_days"], errors="coerce").fillna(0).astype(int)
+        )
+
     return df
 
 
@@ -117,6 +150,10 @@ if __name__ == "__main__":
         "Weight Class",
         "date",
         "form_last_5",
+        "height_cm",
+        "reach_cm",
+        "stance",
+        "age_at_fight_days",
     ] + [c for c in fight_stats.columns if c.endswith("_rolling_mean")]
     reduced = fight_stats[reduced_cols]
     reduced.to_csv(DATA_DIR / "df_estadisticas_ultimos_5.csv", index=False)
