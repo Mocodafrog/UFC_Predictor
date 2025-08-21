@@ -204,6 +204,13 @@ else:
         )
         st.stop()
 
+    # Verificar que las columnas coincidan con las esperadas por el modelo
+    if stats_features_1.columns.tolist() != columnas_X:
+        st.error(
+            "Las columnas de las características no coinciden con las esperadas por el modelo."
+        )
+        st.stop()
+
     # Función para hacer la predicción del ganador
     def hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2):
         # Realizar la predicción para ambos peleadores
