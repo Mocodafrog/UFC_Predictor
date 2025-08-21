@@ -82,7 +82,12 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
         df[f"atmp_{base}"] = atmp
 
     # Compute landed strikes per minute for selected categories
-    fight_length_min = df["Total_fight_length_sec"].replace(0, pd.NA) / 60
+    fight_length_min = (
+        df["Total_fight_length_sec"].replace(0, pd.NA).div(60).fillna(1)
+    )
+    # The division above assumes a minimum fight duration of one minute.
+    # Using ``pd.NA`` first prevents division by zero while ``fillna(1)``
+    # provides a sensible default for extremely short or missing fights.
     lpm_bases = [
         "sig_str",
         "total_str",
