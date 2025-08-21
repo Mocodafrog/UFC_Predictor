@@ -109,6 +109,18 @@ stats_fighter_2 = (
     .head(1)
 )
 
+# Listas de formatos y clases de peso disponibles
+format_list = (
+    fight_stats["Format"].dropna().unique().tolist()
+    if "Format" in fight_stats.columns
+    else []
+)
+weight_class_list = (
+    fight_stats["Weight Class"].dropna().unique().tolist()
+    if "Weight Class" in fight_stats.columns
+    else []
+)
+
 if stats_fighter_1.empty or stats_fighter_2.empty:
     st.error("No se encontraron estadísticas para uno o ambos peleadores.")
 else:
@@ -116,11 +128,29 @@ else:
     form_last_5_fighter_1 = stats_fighter_1["form_last_5"].iloc[0]
     form_last_5_fighter_2 = stats_fighter_2["form_last_5"].iloc[0]
 
-    # Asignar formato y clase de peso directamente desde las estadísticas filtradas
-    format_input = stats_fighter_1["Format"].iloc[0]
-    weight_class_input = stats_fighter_1["Weight Class"].iloc[0]
+    # Selección de formato y clase de peso
+    default_format = stats_fighter_1["Format"].iloc[0]
+    default_weight_class = stats_fighter_1["Weight Class"].iloc[0]
+    format_index = (
+        format_list.index(default_format) if default_format in format_list else 0
+    )
+    weight_class_index = (
+        weight_class_list.index(default_weight_class)
+        if default_weight_class in weight_class_list
+        else 0
+    )
+    format_input = st.selectbox(
+        "Selecciona el formato (rondas):",
+        format_list,
+        index=format_index,
+    )
+    weight_class_input = st.selectbox(
+        "Selecciona la clase de peso:",
+        weight_class_list,
+        index=weight_class_index,
+    )
 
-    # Mostrar valores seleccionados y calculados para transparencia
+    # Mostrar valores calculados para transparencia
     st.write(f"Formato de la pelea: {format_input}")
     st.write(f"Clase de peso: {weight_class_input}")
     st.write(f"Forma últimos 5 de {fighter_1}: {form_last_5_fighter_1}")
@@ -128,6 +158,14 @@ else:
 
     stats_features_1 = stats_fighter_1[columnas_X]
     stats_features_2 = stats_fighter_2[columnas_X]
+
+    # Incluir formato y categoría de peso en el modelo si se utilizan
+    if "Format" in stats_features_1.columns:
+        stats_features_1["Format"] = format_input
+        stats_features_2["Format"] = format_input
+    if "Weight Class" in stats_features_1.columns:
+        stats_features_1["Weight Class"] = weight_class_input
+        stats_features_2["Weight Class"] = weight_class_input
 
     # Función para hacer la predicción del ganador
     def hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2):
