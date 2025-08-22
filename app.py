@@ -85,7 +85,7 @@ if "Rounds" in fight_stats.columns:
     )
 if "Format" in fight_stats.columns:
     fight_stats["Format"] = (
-        fight_stats["Format"].str.extract(r"(\d+)").astype(float)
+        fight_stats["Format"].astype(str).str.extract(r"(\d+)").astype(float)
     )
 if "Weight Class" in fight_stats.columns:
     weight_class_cat = pd.Categorical(fight_stats["Weight Class"])
@@ -188,7 +188,11 @@ else:
     # Convertir entradas del usuario al mismo código utilizado en el entrenamiento
     if "Format" in stats_features_1.columns:
         format_input_code = (
-            pd.Series([format_input]).str.extract(r"(\d+)").astype(float).iloc[0]
+            pd.Series([format_input])
+            .astype(str)
+            .str.extract(r"(\d+)")
+            .astype(float)
+            .iloc[0]
         )
         stats_features_1["Format"] = format_input_code
         stats_features_2["Format"] = format_input_code
