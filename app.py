@@ -56,7 +56,10 @@ def _sanitize(name: str) -> str:
 
 # Asegurarse de que las columnas del modelo se carguen correctamente
 try:
-    columnas_X_raw = pd.read_csv("data/columnas_X.csv", header=None).squeeze().tolist()
+    columnas_X_raw = (
+        pd.read_csv("data/columnas_X.csv", header=None).squeeze().tolist()
+    )
+    columnas_X_raw = [c for c in columnas_X_raw if c.lower() != "win"]
 except FileNotFoundError:
     st.error("Archivo de columnas no encontrado: data/columnas_X.csv")
     st.stop()
@@ -184,6 +187,8 @@ else:
 
     stats_features_1 = stats_fighter_1[columnas_X].copy()
     stats_features_2 = stats_fighter_2[columnas_X].copy()
+    stats_features_1 = stats_features_1.drop(columns=['win'], errors='ignore')
+    stats_features_2 = stats_features_2.drop(columns=['win'], errors='ignore')
 
     # Convertir entradas del usuario al mismo código utilizado en el entrenamiento
     if "Format" in stats_features_1.columns:
