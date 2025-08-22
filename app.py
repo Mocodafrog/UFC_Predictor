@@ -187,9 +187,11 @@ else:
 
     stats_features_1 = stats_fighter_1[columnas_X].copy()
     stats_features_2 = stats_fighter_2[columnas_X].copy()
-    stats_features_1 = stats_features_1.drop(columns=['win'], errors='ignore')
-    stats_features_2 = stats_features_2.drop(columns=['win'], errors='ignore')
-
+    stats_features_1 = stats_features_1.drop(columns=["win"], errors="ignore")
+    stats_features_2 = stats_features_2.drop(columns=["win"], errors="ignore")
+    if "win" in stats_features_1.columns or "win" in stats_features_2.columns:
+        st.error("La columna 'win' no debe estar presente en las características")
+        st.stop()
     # Convertir entradas del usuario al mismo código utilizado en el entrenamiento
     if "Format" in stats_features_1.columns:
         format_input_code = (
