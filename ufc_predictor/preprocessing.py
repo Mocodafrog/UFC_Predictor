@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 import pandas as pd
+from sklearn.impute import SimpleImputer
 
 
 def convert_height_to_cm(height: str) -> float | None:
@@ -85,9 +86,14 @@ def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
     df["weight_kg"] = df["weight"].apply(convert_weight_to_kg)
     df["reach_cm"] = df["reach"].apply(convert_reach_to_cm)
 
-    df["height_cm"].fillna(0, inplace=True)
-    df["weight_kg"].fillna(0, inplace=True)
-    df["reach_cm"].fillna(0, inplace=True)
+    df["height_missing"] = df["height_cm"].isna()
+    df["weight_missing"] = df["weight_kg"].isna()
+    df["reach_missing"] = df["reach_cm"].isna()
+
+    imputer = SimpleImputer(strategy="median")
+    df[["height_cm", "weight_kg", "reach_cm"]] = imputer.fit_transform(
+        df[["height_cm", "weight_kg", "reach_cm"]]
+    )
 
     df["birthdate"] = df["birthdate"].apply(
         lambda x: (
@@ -103,8 +109,11 @@ def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
             "fighter_id",
             "full_name",
             "height_cm",
+            "height_missing",
             "weight_kg",
+            "weight_missing",
             "reach_cm",
+            "reach_missing",
             "stance",
             "wins",
             "losses",
