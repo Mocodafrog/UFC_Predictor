@@ -110,6 +110,7 @@ critical_cols = [
 missing_critical = [c for c in critical_cols if c not in columnas_X]
 if missing_critical:
     st.warning(f"Columnas no incluidas en columnas_X: {missing_critical}")
+    columnas_X.extend(missing_critical)
 
 # Título de la app
 st.title('Predicción de Resultados de Peleas de UFC')
