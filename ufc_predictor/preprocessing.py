@@ -1,39 +1,64 @@
 
 from __future__ import annotations
+
 import re
 import pandas as pd
 
 
 def convert_height_to_cm(height: str) -> float | None:
-    """Convert a height value like ``6' 2\"`` to centimeters."""
-    if height and height != "--":
-        try:
-            feet, inches = height.split("' ")
-            inches = inches.replace('"', '')
-            return int(feet) * 30.48 + int(inches) * 2.54
-        except ValueError:
-            return None
-    return None
+    """Convert height strings like ``6'2"`` or ``6ft2in`` to centimeters."""
+
+    if not height or height == "--":
+        return None
+
+    match = re.match(
+        r"^\s*(?P<feet>\d+)\s*(?:ft|')\s*(?P<inches>\d*)\s*(?:in|\"|inches)?\s*$",
+        height,
+        flags=re.IGNORECASE,
+    )
+
+    if not match:
+        return None
+
+    feet = int(match.group("feet"))
+    inches = int(match.group("inches")) if match.group("inches") else 0
+    return feet * 30.48 + inches * 2.54
 
 
 def convert_weight_to_kg(weight: str) -> float | None:
-    """Convert a weight value like ``170 lbs."`` to kilograms."""
-    if weight and weight != "--":
-        try:
-            return float(weight.replace(' lbs.', '')) * 0.453592
-        except ValueError:
-            return None
-    return None
+    """Convert weight strings like ``170lb`` or ``170 lbs.`` to kilograms."""
+
+    if not weight or weight == "--":
+        return None
+
+    match = re.match(
+        r"^\s*(?P<weight>\d+(?:\.\d+)?)\s*(?:(?:lbs?|pounds?)\.?)?\s*$",
+        weight,
+        flags=re.IGNORECASE,
+    )
+
+    if not match:
+        return None
+
+    return float(match.group("weight")) * 0.453592
 
 
 def convert_reach_to_cm(reach: str) -> float | None:
-    """Convert a reach measurement in inches to centimeters."""
-    if reach and reach != "--":
-        try:
-            return float(reach.replace('"', '')) * 2.54
-        except ValueError:
-            return None
-    return None
+    """Convert reach measurements like ``70in`` or ``70\"`` to centimeters."""
+
+    if not reach or reach == "--":
+        return None
+
+    match = re.match(
+        r"^\s*(?P<reach>\d+(?:\.\d+)?)\s*(?:in|\"|inches)?\.?\s*$",
+        reach,
+        flags=re.IGNORECASE,
+    )
+
+    if not match:
+        return None
+
+    return float(match.group("reach")) * 2.54
 
 
 def preprocess_fighters(df: pd.DataFrame) -> pd.DataFrame:
