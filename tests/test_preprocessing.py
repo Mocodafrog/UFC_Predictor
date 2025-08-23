@@ -46,3 +46,40 @@ def test_preprocess_fighters_birthdate_null_values():
     assert (processed.loc[processed["full_name"] == "F1", "birthdate"].item()) == "N/A"
     assert (processed.loc[processed["full_name"] == "F2", "birthdate"].item()) == "N/A"
 
+
+def test_preprocess_fighters_imputes_missing_and_flags():
+    df = pd.DataFrame(
+        {
+            "full_name": ["F1", "F2", "F3"],
+            "height": ["6' 0\"", None, "5' 8\""],
+            "weight": ["170 lbs.", "145 lbs.", None],
+            "reach": ["70\"", "68\"", None],
+            "stance": ["Orthodox", "Southpaw", "Orthodox"],
+            "wins": [10, 5, 7],
+            "losses": [2, 3, 4],
+            "draws": [0, 1, 0],
+            "birthdate": ["Jan 01, 1990", "Feb 02, 1992", None],
+        }
+    )
+
+    processed = preprocess_fighters(df)
+
+    assert processed.loc[processed["full_name"] == "F2", "height_missing"].item()
+    assert not processed.loc[processed["full_name"] == "F1", "height_missing"].item()
+    assert processed.loc[processed["full_name"] == "F3", "weight_missing"].item()
+    assert processed.loc[processed["full_name"] == "F3", "reach_missing"].item()
+
+    expected_height = (convert_height_to_cm("6' 0\"") + convert_height_to_cm("5' 8\"")) / 2
+    expected_weight = (convert_weight_to_kg("170 lbs.") + convert_weight_to_kg("145 lbs.")) / 2
+    expected_reach = (convert_reach_to_cm("70\"") + convert_reach_to_cm("68\"")) / 2
+
+    assert processed.loc[processed["full_name"] == "F2", "height_cm"].item() == pytest.approx(
+        expected_height
+    )
+    assert processed.loc[processed["full_name"] == "F3", "weight_kg"].item() == pytest.approx(
+        expected_weight
+    )
+    assert processed.loc[processed["full_name"] == "F3", "reach_cm"].item() == pytest.approx(
+        expected_reach
+    )
+
