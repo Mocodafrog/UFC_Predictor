@@ -1,3 +1,3 @@
-Accuracy: 0.6144
-ROC-AUC: 0.7559
+Accuracy: 0.7278
+ROC-AUC: 0.8524
 Random state: 42
