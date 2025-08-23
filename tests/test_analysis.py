@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from ufc_predictor.analysis import aggregate_last_five_stats
+from ufc_predictor.analysis import aggregate_last_five_stats, get_next_5_results
 
 
 def test_aggregate_last_five_stats_missing_columns():
@@ -24,3 +24,29 @@ def test_aggregate_last_five_stats_tail_and_date_conversion():
     assert pd.api.types.is_datetime64_any_dtype(result["date"])
     assert result.loc[result["fighter"] == "A", "KD"].iloc[0] == pytest.approx(3.0)
     assert result.loc[result["fighter"] == "A", "date"].iloc[0] == pd.Timestamp("2020-01-06")
+
+
+def test_get_next_5_results_padding_and_mapping():
+    df = pd.DataFrame(
+        {
+            "fighter": ["A"] * 3,
+            "Winner": ["W", "L", "W"],
+        }
+    )
+
+    result = get_next_5_results(df)
+
+    assert list(result) == ["LWNNN", "WNNNN", "NNNNN"]
+
+
+def test_get_next_5_results_unexpected_values():
+    df = pd.DataFrame(
+        {
+            "fighter": ["A"] * 6,
+            "Winner": ["W", "X", "L", "D", None, "W"],
+        }
+    )
+
+    result = get_next_5_results(df)
+
+    assert list(result) == ["NLDNW", "LDNWN", "DNWNN", "NWNNN", "WNNNN", "NNNNN"]
