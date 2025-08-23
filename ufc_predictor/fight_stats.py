@@ -8,6 +8,32 @@ import numpy as np
 DATA_DIR = Path("data")
 
 
+# Regex-based mapping to collapse a variety of historical and tournament
+# weight-class labels into a canonical set. Patterns are evaluated in order so
+# that specific classes (e.g. ``Women's Flyweight``) take precedence over more
+# generic ones like ``Flyweight``.
+WEIGHT_CLASS_MAP = {
+    r".*Women's Bantamweight.*": "Women's Bantamweight",
+    r".*Women's Featherweight.*": "Women's Featherweight",
+    r".*Women's Flyweight.*": "Women's Flyweight",
+    r".*Women's Strawweight.*": "Women's Strawweight",
+    r".*(?<!Women's )Bantamweight.*": "Bantamweight",
+    r".*(?<!Women's )Featherweight.*": "Featherweight",
+    r".*(?<!Women's )Flyweight.*": "Flyweight",
+    r".*Light Heavyweight.*": "Light Heavyweight",
+    r".*Lightweight.*": "Lightweight",
+    r".*Middleweight.*": "Middleweight",
+    r".*Welterweight.*": "Welterweight",
+    r".*Super Heavyweight.*": "Super Heavyweight",
+    r".*Heavyweight.*": "Heavyweight",
+    r".*Catch Weight.*": "Catchweight",
+    r".*Open Weight.*": "Openweight",
+    r".*Tournament.*": "Openweight",
+    r".*Superfight.*": "Openweight",
+    r".*Grand Prix.*": "Openweight",
+}
+
+
 def _extract_numeric_pair(text: str) -> tuple[int, int]:
     """Return the landed and attempted values from strings like ``"20 of 53"``.
 
@@ -47,6 +73,17 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
     except FileNotFoundError:
         print(f"CSV file not found at {csv_path}")
         return pd.DataFrame()
+
+    df = df[~df["Winner"].isin(["NC", "D"]) & (df["Method"] != "DQ")]
+    df["Weight Class"] = df["Weight Class"].replace(WEIGHT_CLASS_MAP, regex=True)
+    df["Method"] = df["Method"].replace(
+        {
+            "Decision - Majority": "Decision",
+            "Decision - Split": "Decision",
+            "Decision - Unanimous": "Decision",
+            "TKO - Doctor's Stoppage": "KO/TKO",
+        }
+    )
 
     # Sequential date placeholder to preserve chronological order per fighter
     df["date"] = df.groupby("Fighter").cumcount()
