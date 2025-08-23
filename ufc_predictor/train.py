@@ -125,6 +125,14 @@ def train(
             ", ".join(faltantes),
         )
 
+    # Ensure essential bout metadata columns are always included when available
+    critical_cols = [
+        c for c in ["Rounds", "Format", "Weight Class"] if c in fight_stats.columns
+    ]
+    for col in critical_cols:
+        if col not in columnas_procesadas:
+            columnas_procesadas.append(col)
+
     if not columnas_procesadas:
         raise SystemExit("No se pudieron alinear columnas para entrenamiento")
 

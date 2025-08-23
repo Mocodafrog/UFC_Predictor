@@ -75,6 +75,11 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
         return pd.DataFrame()
 
     df = df[~df["Winner"].isin(["NC", "D"]) & (df["Method"] != "DQ")]
+    if "Format" in df.columns:
+        format_numeric = pd.to_numeric(
+            df["Format"].astype(str).str.extract(r"(\d+)")[0], errors="coerce"
+        )
+        df = df[format_numeric.isin([3, 5])].copy()
     df["Weight Class"] = df["Weight Class"].replace(WEIGHT_CLASS_MAP, regex=True)
     df["Method"] = df["Method"].replace(
         {
