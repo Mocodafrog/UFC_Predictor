@@ -82,6 +82,12 @@ def train(
         )
         raise SystemExit(1)
 
+    # Filtrar resultados inválidos para el entrenamiento
+    fight_stats = fight_stats[
+        (fight_stats["Winner"].isin(["W", "L"]))  # Mantener solo victorias o derrotas
+        & (fight_stats["Method"] != "DQ")  # Excluir peleas terminadas por descalificación
+    ]
+
     try:
         columnas_X = pd.read_csv(
             os.path.join(data_dir, "columnas_X.csv"), header=None

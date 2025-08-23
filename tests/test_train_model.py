@@ -39,9 +39,9 @@ class DummyStackingClassifier:
 
 def test_train_split_deterministic(tmp_path, monkeypatch):
     X = pd.DataFrame({"feat": range(12)})
-    y = [0, 1] * 6
+    y = ["W", "L"] * 6
 
-    fight_stats = X.assign(Winner=y)
+    fight_stats = X.assign(Winner=y, Method="KO")
     fight_stats.to_csv(tmp_path / "fight_stats.csv", index=False)
     pd.Series(["feat"]).to_csv(tmp_path / "columnas_X.csv", index=False, header=False)
 
