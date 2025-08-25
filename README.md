@@ -33,6 +33,10 @@ El flujo de trabajo incluye desde el web scraping de datos de peleadores y comba
   - Predicción del método de victoria.
 - Aplicación web interactiva que permite al usuario cargar parámetros de un combate y obtener predicciones.
 
+## Diferencia de cálculo de probabilidades
+
+La aplicación ahora muestra las probabilidades de victoria generadas por el modelo sin normalizarlas por la suma de ambos peleadores. Para fines informativos también se presentan porcentajes normalizados, pero la determinación del ganador se basa en las probabilidades originales.
+
 ## Demo de la Aplicación
 
 La aplicación Streamlit está disponible públicamente en el siguiente enlace:
