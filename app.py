@@ -234,18 +234,31 @@ else:
         proba_fighter_1 = pred_proba_fighter_1[0][1]  # Probabilidad de que fighter_1 gane
         proba_fighter_2 = pred_proba_fighter_2[0][1]  # Probabilidad de que fighter_2 gane
 
-        # Normalizar las probabilidades para que sumen 100% solo si el total es mayor a 0
+        st.write("\n--- Resultados de la Predicción del Ganador ---")
+        # Mostrar probabilidades sin normalizar
+        st.write(
+            f"{fighter_1}: {proba_fighter_1 * 100:.2f}% (sin normalizar)"
+        )
+        st.write(
+            f"{fighter_2}: {proba_fighter_2 * 100:.2f}% (sin normalizar)"
+        )
+
+        # Calcular versión normalizada sólo con fines informativos
         total = proba_fighter_1 + proba_fighter_2
         if total > 0:
-            proba_fighter_1_normalized = (proba_fighter_1 / total) * 100
-            proba_fighter_2_normalized = (proba_fighter_2 / total) * 100
-
-            st.write("\n--- Resultados de la Predicción del Ganador ---")
+            proba_fighter_1_normalized = proba_fighter_1 / total * 100
+            proba_fighter_2_normalized = proba_fighter_2 / total * 100
+            st.write("Probabilidades normalizadas:")
             st.write(f"{fighter_1}: {proba_fighter_1_normalized:.2f}%")
             st.write(f"{fighter_2}: {proba_fighter_2_normalized:.2f}%")
-            st.write(f"Predicción del ganador: {fighter_1 if proba_fighter_1_normalized > proba_fighter_2_normalized else fighter_2}")
         else:
-            st.error("Error: la suma de probabilidades es 0, se omite la normalización.")
+            st.error(
+                "Error: la suma de probabilidades es 0, se omite la normalización."
+            )
+
+        st.write(
+            f"Predicción del ganador: {fighter_1 if proba_fighter_1 > proba_fighter_2 else fighter_2}"
+        )
 
     # Función para hacer la predicción del método de pelea
     def hacer_prediccion_method(
