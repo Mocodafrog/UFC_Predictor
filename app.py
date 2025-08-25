@@ -235,15 +235,8 @@ else:
         proba_fighter_2 = pred_proba_fighter_2[0][1]  # Probabilidad de que fighter_2 gane
 
         st.write("\n--- Resultados de la Predicción del Ganador ---")
-        # Mostrar probabilidades sin normalizar
-        st.write(
-            f"{fighter_1}: {proba_fighter_1 * 100:.2f}% (sin normalizar)"
-        )
-        st.write(
-            f"{fighter_2}: {proba_fighter_2 * 100:.2f}% (sin normalizar)"
-        )
 
-        # Calcular versión normalizada sólo con fines informativos
+        # Mostrar probabilidades normalizadas
         total = proba_fighter_1 + proba_fighter_2
         if total > 0:
             proba_fighter_1_normalized = proba_fighter_1 / total * 100
