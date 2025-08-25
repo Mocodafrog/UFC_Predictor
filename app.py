@@ -145,11 +145,8 @@ format_list = (
     if "Format" in fight_stats.columns
     else []
 )
-weight_class_list = (
-    fight_stats["Weight Class"].dropna().unique().tolist()
-    if "Weight Class" in fight_stats.columns
-    else []
-)
+inverse_weight_class_mapping = {v: k for k, v in weight_class_mapping.items()}
+weight_class_list = list(weight_class_mapping.keys()) if weight_class_mapping else []
 
 if stats_fighter_1.empty or stats_fighter_2.empty:
     st.error("No se encontraron estadísticas para uno o ambos peleadores.")
@@ -160,7 +157,11 @@ else:
 
     # Selección de formato y clase de peso
     default_format = stats_fighter_1["Format"].iloc[0]
-    default_weight_class = stats_fighter_1["Weight Class"].iloc[0]
+    default_weight_class_code = stats_fighter_1["Weight Class"].iloc[0]
+    default_weight_class = inverse_weight_class_mapping.get(
+        default_weight_class_code,
+        weight_class_list[0] if weight_class_list else None,
+    )
     format_index = (
         format_list.index(default_format) if default_format in format_list else 0
     )
@@ -174,7 +175,7 @@ else:
         format_list,
         index=format_index,
     )
-    weight_class_input = st.selectbox(
+    weight_class_label = st.selectbox(
         "Selecciona la clase de peso:",
         weight_class_list,
         index=weight_class_index,
@@ -182,7 +183,7 @@ else:
 
     # Mostrar valores calculados para transparencia
     st.write(f"Formato de la pelea: {format_input}")
-    st.write(f"Clase de peso: {weight_class_input}")
+    st.write(f"Clase de peso: {weight_class_label}")
     st.write(f"Forma últimos 5 de {fighter_1}: {form_last_5_fighter_1}")
     st.write(f"Forma últimos 5 de {fighter_2}: {form_last_5_fighter_2}")
 
@@ -205,7 +206,7 @@ else:
         stats_features_1["Format"] = format_input_code
         stats_features_2["Format"] = format_input_code
     if "Weight Class" in stats_features_1.columns:
-        weight_class_input_code = weight_class_mapping.get(weight_class_input, -1)
+        weight_class_input_code = weight_class_mapping[weight_class_label]
         stats_features_1["Weight Class"] = weight_class_input_code
         stats_features_2["Weight Class"] = weight_class_input_code
 
