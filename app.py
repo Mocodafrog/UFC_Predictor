@@ -83,8 +83,8 @@ if faltantes:
 # Replicar preprocesamiento utilizado durante el entrenamiento
 weight_class_mapping: dict[str, int] = {}
 if "Rounds" in fight_stats.columns:
-    fight_stats["Rounds"] = pd.to_numeric(
-        fight_stats["Rounds"], errors="coerce"
+    fight_stats["Rounds"] = (
+        fight_stats["Rounds"].astype(str).str.extract(r"(\d+)").astype(float)
     )
 if "Format" in fight_stats.columns:
     fight_stats["Format"] = (
@@ -181,9 +181,31 @@ else:
         index=weight_class_index,
     )
 
+    rounds_list = (
+        fight_stats["Rounds"].dropna().unique().tolist()
+        if "Rounds" in fight_stats.columns
+        else []
+    )
+    default_rounds = (
+        stats_fighter_1["Rounds"].iloc[0]
+        if "Rounds" in stats_fighter_1.columns
+        else (rounds_list[0] if rounds_list else None)
+    )
+    rounds_index = (
+        rounds_list.index(default_rounds)
+        if default_rounds in rounds_list
+        else 0
+    )
+    rounds_input = st.selectbox(
+        "Rondas:",
+        rounds_list,
+        index=rounds_index,
+    )
+
     # Mostrar valores calculados para transparencia
     st.write(f"Formato de la pelea: {format_input}")
     st.write(f"Clase de peso: {weight_class_label}")
+    st.write(f"Rondas: {rounds_input}")
     st.write(f"Forma últimos 5 de {fighter_1}: {form_last_5_fighter_1}")
     st.write(f"Forma últimos 5 de {fighter_2}: {form_last_5_fighter_2}")
 
@@ -199,12 +221,24 @@ else:
         format_input_code = (
             pd.Series([format_input])
             .astype(str)
-            .str.extract(r"(\d+)")
+            .str.extract(r"(\d+)", expand=False)
             .astype(float)
             .iloc[0]
         )
         stats_features_1["Format"] = format_input_code
         stats_features_2["Format"] = format_input_code
+    if "Rounds" in stats_features_1.columns:
+        stats_features_1["Rounds"] = format_input_code
+        stats_features_2["Rounds"] = format_input_code
+        rounds_input_code = (
+            pd.Series([rounds_input])
+            .astype(str)
+            .str.extract(r"(\d+)", expand=False)
+            .astype(float)
+            .iloc[0]
+        )
+        stats_features_1["Rounds"] = rounds_input_code
+        stats_features_2["Rounds"] = rounds_input_code
     if "Weight Class" in stats_features_1.columns:
         weight_class_input_code = weight_class_mapping[weight_class_label]
         stats_features_1["Weight Class"] = weight_class_input_code
