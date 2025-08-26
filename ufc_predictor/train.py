@@ -11,6 +11,7 @@ models and their evaluation metrics under ``models/{MODEL_VERSION}``.
 __all__ = ["train"]
 
 import os
+import json
 
 import joblib
 import pandas as pd
@@ -209,14 +210,18 @@ def train(
         imputer = SimpleImputer(strategy="mean")
         X = pd.DataFrame(imputer.fit_transform(X), columns=X.columns, index=X.index)
 
+    # Persistir las columnas utilizadas durante el entrenamiento
+    target_suffix = target_column.lower()
+    with open(os.path.join(models_dir, f"features_{target_suffix}.json"), "w") as f:
+        json.dump(columnas_procesadas, f)
+
     y = fight_stats[target_column]
     encoder = LabelEncoder()
     y = pd.Series(encoder.fit_transform(y), name=target_column)
     joblib.dump(
         encoder,
-        os.path.join(models_dir, f"label_encoder_{target_column.lower()}.pkl"),
+        os.path.join(models_dir, f"label_encoder_{target_suffix}.pkl"),
     )
-    target_suffix = target_column.lower()
 
     if fast_mode:
         X = X.sample(frac=0.1, random_state=RANDOM_STATE)
