@@ -53,7 +53,9 @@ def train(
     fast_mode: bool = False,
     extended_search: bool = False,
     grid_overrides: dict | None = None,
-
+    cv_splits: int = 5,
+    final_estimator: LogisticRegression = LogisticRegression(),
+):
     """Entrena modelos base y un stacking final para ``target_column``.
 
     Parameters
