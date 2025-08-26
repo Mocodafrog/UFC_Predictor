@@ -52,7 +52,10 @@ def train(
     model_names: list[str] | None = None,
     fast_mode: bool = False,
     extended_search: bool = False,
-
+    grid_overrides: dict | None = None,
+    cv_splits: int = 5,
+    final_estimator: LogisticRegression = LogisticRegression(),
+):
     """Entrena modelos base y un stacking final para ``target_column``.
 
     Parameters
@@ -85,7 +88,12 @@ def train(
         deben coincidir con las del diccionario ``models`` y sus valores se
         combinan con los grids por defecto, sustituyendo o ampliando los
         existentes.
-
+    cv_splits:
+        Número de particiones para la validación cruzada (se reduce a 2 si
+        ``fast_mode`` es ``True``).
+    final_estimator:
+        Estimador final del stacking. Por defecto se utiliza
+        ``LogisticRegression()``.
 
     Notes
     -----
