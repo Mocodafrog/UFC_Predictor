@@ -28,6 +28,22 @@ RANDOM_STATE = 42
 DATA_DIR = os.path.abspath("data")
 
 
+def _merge_params(base: dict, overrides: dict) -> dict:
+    """Merge hyperparameter grids, extending or replacing existing values."""
+
+    def _to_list(value):
+        return list(value) if isinstance(value, (list, tuple)) else [value]
+
+    merged = {k: _to_list(v) for k, v in base.items()}
+    for param, values in overrides.items():
+        vals = _to_list(values)
+        if param in merged:
+            merged[param].extend(v for v in vals if v not in merged[param])
+        else:
+            merged[param] = vals
+    return merged
+
+
 def train(
     target_column: str,
     data_dir: str = DATA_DIR,
@@ -36,6 +52,7 @@ def train(
     model_names: list[str] | None = None,
     fast_mode: bool = False,
     extended_search: bool = False,
+    grid_overrides: dict | None = None,
 ) -> None:
     """Entrena modelos base y un stacking final para ``target_column``.
 
@@ -64,6 +81,11 @@ def train(
     extended_search:
         Activa grids de hiperparámetros más amplios para una búsqueda más
         exhaustiva a costa de mayor tiempo de entrenamiento.
+    grid_overrides:
+        Diccionario con hiperparámetros adicionales por modelo. Las claves
+        deben coincidir con las del diccionario ``models`` y sus valores se
+        combinan con los grids por defecto, sustituyendo o ampliando los
+        existentes.
 
     Notes
     -----
@@ -312,6 +334,12 @@ def train(
         models = {k: v for k, v in models.items() if k.lower() in nombres}
         if not models:
             raise SystemExit("No se encontraron modelos válidos en model_names")
+
+    if grid_overrides:
+        for nombre, override in grid_overrides.items():
+            if nombre in models:
+                modelo, params = models[nombre]
+                models[nombre] = (modelo, _merge_params(params, override))
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=RANDOM_STATE

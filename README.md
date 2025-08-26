@@ -96,6 +96,22 @@ Puedes ajustar el comportamiento mediante variables de entorno:
 - `EXTENDED_SEARCH=1`: activa grids de hiperparámetros más amplios para una búsqueda exhaustiva.
   Si ambos flags se usan, `FAST_MODE` tiene prioridad.
 
+Opcionalmente puedes suministrar un archivo JSON o YAML con ajustes de
+hiperparámetros por modelo. Pásalo como primer argumento al script y sus
+valores se combinarán con los grids por defecto. Ejemplo:
+
+```json
+// grid.json
+{
+  "RandomForest": {"n_estimators": [150, 200]},
+  "LogisticRegression": {"C": [0.5, 2.0]}
+}
+```
+
+```bash
+python entrenamiento.py grid.json
+```
+
 Para entrenar el modelo del método de victoria:
 
 ```bash
