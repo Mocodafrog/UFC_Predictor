@@ -36,6 +36,7 @@ def train(
     model_names: list[str] | None = None,
     fast_mode: bool = False,
     extended_search: bool = False,
+    cv_splits: int = 3,
 ) -> None:
     """Entrena modelos base y un stacking final para ``target_column``.
 
@@ -64,11 +65,14 @@ def train(
     extended_search:
         Activa grids de hiperparámetros más amplios para una búsqueda más
         exhaustiva a costa de mayor tiempo de entrenamiento.
+    cv_splits:
+        Número de particiones para la validación cruzada cuando ``fast_mode``
+        está desactivado. El valor efectivo será ``min(cv_splits, min_clase)``.
 
     Notes
     -----
-    Se requiere al menos ``min(3, min_clase)`` muestras por clase para la
-    validación estratificada (``min(2, min_clase)`` si se activa
+    Se requiere al menos ``min(cv_splits, min_clase)`` muestras por clase para
+    la validación estratificada (``min(2, min_clase)`` si se activa
     ``fast_mode``) donde ``min_clase`` es la cantidad mínima de ejemplos por
     clase en ``y``. Si alguna clase tiene menos ejemplos, aumenta los datos de
     entrenamiento.
@@ -316,7 +320,7 @@ def train(
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=RANDOM_STATE
     )
-    n_splits = min(2 if fast_mode else 3, min_clase)
+    n_splits = min(cv_splits if not fast_mode else 2, min_clase)
     # Se requieren al menos ``n_splits`` muestras por clase o debes aumentar los datos.
     cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=RANDOM_STATE)
     mejores = []
