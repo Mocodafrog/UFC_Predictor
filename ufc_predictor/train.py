@@ -36,6 +36,7 @@ def train(
     model_names: list[str] | None = None,
     fast_mode: bool = False,
     extended_search: bool = False,
+    final_estimator=LogisticRegression(random_state=RANDOM_STATE),
 ) -> None:
     """Entrena modelos base y un stacking final para ``target_column``.
 
@@ -64,6 +65,9 @@ def train(
     extended_search:
         Activa grids de hiperparámetros más amplios para una búsqueda más
         exhaustiva a costa de mayor tiempo de entrenamiento.
+    final_estimator:
+        Estimador final del `StackingClassifier` usado como meta-modelo.
+        Por defecto se utiliza ``LogisticRegression``.
 
     Notes
     -----
@@ -336,7 +340,7 @@ def train(
 
     stacking = StackingClassifier(
         estimators=mejores,
-        final_estimator=LogisticRegression(random_state=RANDOM_STATE),
+        final_estimator=final_estimator,
         cv=cv,
         n_jobs=-1,
     )

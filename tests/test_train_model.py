@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 
 import ufc_predictor.train as train_module
@@ -103,4 +104,35 @@ def test_extended_search_expands_params(tmp_path, monkeypatch):
     assert len(captured["params"]["C"]) > 3
     assert 0.01 in captured["params"]["C"]
     assert 100 in captured["params"]["C"]
+
+
+def test_custom_final_estimator(tmp_path, monkeypatch):
+    X = pd.DataFrame({"feat": range(12)})
+    y = ["W", "L"] * 6
+
+    fight_stats = X.assign(Winner=y, Method="KO")
+    fight_stats.to_csv(tmp_path / "fight_stats.csv", index=False)
+    pd.Series(["feat"]).to_csv(tmp_path / "columnas_X.csv", index=False, header=False)
+
+    captured: dict = {}
+
+    class CaptureStacking(DummyStackingClassifier):
+        def __init__(self, *args, **kwargs):
+            captured["final"] = kwargs.get("final_estimator")
+            super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr(train_module.joblib, "dump", lambda *args, **kwargs: None)
+    monkeypatch.setattr(train_module, "GridSearchCV", DummyGridSearchCV)
+    monkeypatch.setattr(train_module, "StackingClassifier", CaptureStacking)
+
+    final = GradientBoostingClassifier(random_state=train_module.RANDOM_STATE)
+    train(
+        "Winner",
+        data_dir=str(tmp_path),
+        models_dir=str(tmp_path),
+        models={"LogReg": (LogisticRegression(random_state=train_module.RANDOM_STATE), {})},
+        final_estimator=final,
+    )
+
+    assert isinstance(captured["final"], GradientBoostingClassifier)
 
