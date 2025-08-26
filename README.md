@@ -97,6 +97,7 @@ Puedes ajustar el comportamiento mediante variables de entorno:
   Si ambos flags se usan, `FAST_MODE` tiene prioridad.
 
 
+
 Para entrenar el modelo del método de victoria:
 
 ```bash

@@ -114,7 +114,6 @@ def test_extended_search_expands_params(tmp_path, monkeypatch):
     fight_stats.to_csv(tmp_path / "fight_stats.csv", index=False)
     pd.Series(["feat"]).to_csv(tmp_path / "columnas_X.csv", index=False, header=False)
 
-
     train(
         "Winner",
         data_dir=str(tmp_path),

@@ -1,6 +1,6 @@
 
-import argparse
 import os
+import sys
 
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
@@ -8,12 +8,21 @@ from sklearn.linear_model import LogisticRegression
 from ufc_predictor.train import RANDOM_STATE, train
 
 
+
+def _load_overrides(path: str) -> dict:
+    if path.lower().endswith((".yml", ".yaml")):
+        try:
+            import yaml
+        except ImportError as exc:  # pragma: no cover - optional dependency
+            raise SystemExit("PyYAML es requerido para archivos YAML") from exc
+        with open(path) as f:
+            return yaml.safe_load(f)
+    with open(path) as f:
+        return json.load(f)
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--cv-splits", type=int, default=None, help="Número de pliegues de validación cruzada"
-    )
-    args = parser.parse_args()
+
 
     model_names = os.getenv("MODEL_NAMES")
     nombres = [m.strip() for m in model_names.split(",") if m.strip()] if model_names else None
