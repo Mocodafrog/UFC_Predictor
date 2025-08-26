@@ -397,3 +397,5 @@ def train(
         f.write(f"Accuracy: {accuracy:.4f}\n")
         f.write(f"ROC-AUC: {roc_auc:.4f}\n")
         f.write(f"Random state: {RANDOM_STATE}\n")
+
+    return stacking
