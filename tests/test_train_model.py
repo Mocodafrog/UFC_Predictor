@@ -104,19 +104,3 @@ def test_extended_search_expands_params(tmp_path, monkeypatch):
     assert len(captured["params"]["C"]) > 3
     assert 0.01 in captured["params"]["C"]
     assert 100 in captured["params"]["C"]
-
-
-
-    X = pd.DataFrame({"feat": range(12)})
-    y = ["W", "L"] * 6
-
-    fight_stats = X.assign(Winner=y, Method="KO")
-    fight_stats.to_csv(tmp_path / "fight_stats.csv", index=False)
-    pd.Series(["feat"]).to_csv(tmp_path / "columnas_X.csv", index=False, header=False)
-
-    train(
-        "Winner",
-        data_dir=str(tmp_path),
-        models_dir=str(tmp_path),
-
-
