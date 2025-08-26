@@ -95,8 +95,7 @@ Puedes ajustar el comportamiento mediante variables de entorno:
 - `FAST_MODE=1`: usa un subconjunto de datos y grids mínimos para ejecuciones rápidas.
 - `EXTENDED_SEARCH=1`: activa grids de hiperparámetros más amplios para una búsqueda exhaustiva.
   Si ambos flags se usan, `FAST_MODE` tiene prioridad.
-- `FINAL_ESTIMATOR`: meta-modelo del `StackingClassifier` (por defecto `LogisticRegression`).
-  Ejemplo: `FINAL_ESTIMATOR=GradientBoosting`.
+
 
 Para entrenar el modelo del método de victoria:
 
