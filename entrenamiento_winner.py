@@ -2,7 +2,10 @@
 import argparse
 import os
 
-from ufc_predictor.train import train
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+
+from ufc_predictor.train import RANDOM_STATE, train
 
 
 if __name__ == "__main__":
@@ -16,13 +19,10 @@ if __name__ == "__main__":
     nombres = [m.strip() for m in model_names.split(",") if m.strip()] if model_names else None
     fast = os.getenv("FAST_MODE", "").lower() in ("1", "true", "yes")
     extended = os.getenv("EXTENDED_SEARCH", "").lower() in ("1", "true", "yes")
-    cv_env = os.getenv("CV_SPLITS")
-    cv_splits = int(cv_env) if cv_env else (args.cv_splits or 3)
 
     train(
         "Winner",
         model_names=nombres,
         fast_mode=fast,
         extended_search=extended,
-        cv_splits=cv_splits,
-    )
+

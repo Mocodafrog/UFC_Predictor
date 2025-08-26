@@ -36,7 +36,7 @@ def train(
     model_names: list[str] | None = None,
     fast_mode: bool = False,
     extended_search: bool = False,
-    cv_splits: int = 3,
+
 ) -> None:
     """Entrena modelos base y un stacking final para ``target_column``.
 
@@ -65,9 +65,7 @@ def train(
     extended_search:
         Activa grids de hiperparámetros más amplios para una búsqueda más
         exhaustiva a costa de mayor tiempo de entrenamiento.
-    cv_splits:
-        Número de particiones para la validación cruzada cuando ``fast_mode``
-        está desactivado. El valor efectivo será ``min(cv_splits, min_clase)``.
+
 
     Notes
     -----
@@ -340,7 +338,7 @@ def train(
 
     stacking = StackingClassifier(
         estimators=mejores,
-        final_estimator=LogisticRegression(random_state=RANDOM_STATE),
+        final_estimator=final_estimator,
         cv=cv,
         n_jobs=-1,
     )

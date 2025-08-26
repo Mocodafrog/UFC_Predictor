@@ -95,8 +95,7 @@ Puedes ajustar el comportamiento mediante variables de entorno:
 - `FAST_MODE=1`: usa un subconjunto de datos y grids mínimos para ejecuciones rápidas.
 - `EXTENDED_SEARCH=1`: activa grids de hiperparámetros más amplios para una búsqueda exhaustiva.
   Si ambos flags se usan, `FAST_MODE` tiene prioridad.
-- `CV_SPLITS`: número de pliegues para la validación cruzada (por defecto, `3`).
-  También puedes establecerlo desde la línea de comandos con `--cv-splits`.
+
 
 Para entrenar el modelo del método de victoria:
 
