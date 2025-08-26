@@ -104,3 +104,36 @@ def test_extended_search_expands_params(tmp_path, monkeypatch):
     assert 0.01 in captured["params"]["C"]
     assert 100 in captured["params"]["C"]
 
+
+def test_cv_splits_respected(tmp_path, monkeypatch):
+    X = pd.DataFrame({"feat": range(12)})
+    y = ["W", "L"] * 6
+
+    fight_stats = X.assign(Winner=y, Method="KO")
+    fight_stats.to_csv(tmp_path / "fight_stats.csv", index=False)
+    pd.Series(["feat"]).to_csv(tmp_path / "columnas_X.csv", index=False, header=False)
+
+    models = {"LogReg": (LogisticRegression(random_state=train_module.RANDOM_STATE), {})}
+
+    monkeypatch.setattr(train_module.joblib, "dump", lambda *args, **kwargs: None)
+    monkeypatch.setattr(train_module, "GridSearchCV", DummyGridSearchCV)
+    monkeypatch.setattr(train_module, "StackingClassifier", DummyStackingClassifier)
+
+    captured = {}
+
+    class DummyStratifiedKFold:
+        def __init__(self, n_splits, *args, **kwargs):
+            captured["n_splits"] = n_splits
+
+    monkeypatch.setattr(train_module, "StratifiedKFold", DummyStratifiedKFold)
+
+    train(
+        "Winner",
+        data_dir=str(tmp_path),
+        models_dir=str(tmp_path),
+        models=models,
+        cv_splits=5,
+    )
+
+    assert captured["n_splits"] == 5
+
