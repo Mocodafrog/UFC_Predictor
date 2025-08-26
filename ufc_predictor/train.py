@@ -18,6 +18,7 @@ from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier,
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
+from sklearn.impute import SimpleImputer
 from sklearn.svm import SVC
 from sklearn.preprocessing import LabelEncoder
 
@@ -193,6 +194,20 @@ def train(
         )
         X = X.drop(columns=no_numericas)
         columnas_procesadas = [c for c in columnas_procesadas if c not in no_numericas]
+
+    # Elimina columnas completamente vacías e imputa el resto
+    vacias = X.columns[X.isna().all()].tolist()
+    if vacias:
+        print(
+            "⚠️ Las siguientes columnas no contienen datos y se descartarán:",
+            ", ".join(vacias),
+        )
+        X = X.drop(columns=vacias)
+        columnas_procesadas = [c for c in columnas_procesadas if c not in vacias]
+
+    if X.isna().any().any():
+        imputer = SimpleImputer(strategy="mean")
+        X = pd.DataFrame(imputer.fit_transform(X), columns=X.columns, index=X.index)
 
     y = fight_stats[target_column]
     encoder = LabelEncoder()
