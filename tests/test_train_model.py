@@ -73,3 +73,34 @@ def test_train_split_deterministic(tmp_path, monkeypatch):
     pd.testing.assert_series_equal(y_train1, y_train2)
     pd.testing.assert_series_equal(y_test1, y_test2)
 
+
+def test_extended_search_expands_params(tmp_path, monkeypatch):
+    X = pd.DataFrame({"feat": range(12)})
+    y = ["W", "L"] * 6
+
+    fight_stats = X.assign(Winner=y, Method="KO")
+    fight_stats.to_csv(tmp_path / "fight_stats.csv", index=False)
+    pd.Series(["feat"]).to_csv(tmp_path / "columnas_X.csv", index=False, header=False)
+
+    captured: dict = {}
+
+    def capture_grid(estimator, params, *args, **kwargs):
+        captured["params"] = params
+        return DummyGridSearchCV(estimator, *args, **kwargs)
+
+    monkeypatch.setattr(train_module.joblib, "dump", lambda *args, **kwargs: None)
+    monkeypatch.setattr(train_module, "GridSearchCV", capture_grid)
+    monkeypatch.setattr(train_module, "StackingClassifier", DummyStackingClassifier)
+
+    train(
+        "Winner",
+        data_dir=str(tmp_path),
+        models_dir=str(tmp_path),
+        model_names=["LogisticRegression"],
+        extended_search=True,
+    )
+
+    assert len(captured["params"]["C"]) > 3
+    assert 0.01 in captured["params"]["C"]
+    assert 100 in captured["params"]["C"]
+
