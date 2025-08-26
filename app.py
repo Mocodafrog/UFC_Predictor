@@ -1,6 +1,7 @@
 import streamlit as st
 import joblib
 import pandas as pd
+import json
 
 from ufc_predictor.config import MODEL_VERSION
 
@@ -48,49 +49,43 @@ except FileNotFoundError:
     st.error("Archivo de estadísticas no encontrado: data/fight_stats.csv")
     st.stop()
 
-
-def _sanitize(name: str) -> str:
-    """Normaliza nombres de columnas para facilitar el cruce."""
-    return name.lower().replace(" ", "_").replace(".", "").replace("/", "_")
-
-
-# Asegurarse de que las columnas del modelo se carguen correctamente
+# Cargar la lista de columnas utilizadas durante el entrenamiento
 try:
-    columnas_X_raw = (
-        pd.read_csv("data/columnas_X.csv", header=None).squeeze().tolist()
-    )
-    columnas_X_raw = [c for c in columnas_X_raw if c.lower() != "win"]
+    with open(
+        f"models/{MODEL_VERSION}/features_winner.json", "r"
+    ) as f:
+        columnas_X = json.load(f)
 except FileNotFoundError:
-    st.error("Archivo de columnas no encontrado: data/columnas_X.csv")
+    st.error(
+        f"No se encontró el archivo de características: models/{MODEL_VERSION}/features_winner.json"
+    )
     st.stop()
 
-column_map = {_sanitize(col): col for col in fight_stats.columns}
-columnas_X: list[str] = []
-faltantes: list[str] = []
-for col in columnas_X_raw:
-    if col in fight_stats.columns:
-        columnas_X.append(col)
-    else:
-        sanitized = _sanitize(col)
-        if sanitized in column_map:
-            columnas_X.append(column_map[sanitized])
-        else:
-            faltantes.append(col)
-
+faltantes = [c for c in columnas_X if c not in fight_stats.columns]
 if faltantes:
-    st.warning(f"Columnas ignoradas por no existir en datos: {faltantes}")
+    st.error(f"Columnas faltantes en datos: {faltantes}")
+    st.stop()
+
+# Remover de fight_stats las columnas que no se usaron en el entrenamiento
+extra_cols = [
+    c
+    for c in ["Rounds", "Format", "Weight Class"]
+    if c in fight_stats.columns and c not in columnas_X
+]
+if extra_cols:
+    fight_stats = fight_stats.drop(columns=extra_cols)
 
 # Replicar preprocesamiento utilizado durante el entrenamiento
 weight_class_mapping: dict[str, int] = {}
-if "Rounds" in fight_stats.columns:
-    fight_stats["Rounds"] = (
-        fight_stats["Rounds"].astype(str).str.extract(r"(\d+)").astype(float)
+if "Rounds" in columnas_X and "Rounds" in fight_stats.columns:
+    fight_stats["Rounds"] = pd.to_numeric(
+        fight_stats["Rounds"], errors="coerce"
     )
-if "Format" in fight_stats.columns:
+if "Format" in columnas_X and "Format" in fight_stats.columns:
     fight_stats["Format"] = (
         fight_stats["Format"].astype(str).str.extract(r"(\d+)").astype(float)
     )
-if "Weight Class" in fight_stats.columns:
+if "Weight Class" in columnas_X and "Weight Class" in fight_stats.columns:
     weight_class_cat = pd.Categorical(fight_stats["Weight Class"])
     weight_class_mapping = {
         cat: code for code, cat in enumerate(weight_class_cat.categories)
@@ -102,15 +97,6 @@ no_numericas = fight_stats[columnas_X].select_dtypes(exclude="number").columns.t
 if no_numericas:
     st.warning(f"Columnas no numéricas ignoradas: {no_numericas}")
     columnas_X = [c for c in columnas_X if c not in no_numericas]
-
-# Verificar que columnas críticas se mantengan en columnas_X
-critical_cols = [
-    c for c in ["Rounds", "Format", "Weight Class"] if c in fight_stats.columns
-]
-missing_critical = [c for c in critical_cols if c not in columnas_X]
-if missing_critical:
-    st.warning(f"Columnas no incluidas en columnas_X: {missing_critical}")
-    columnas_X.extend(missing_critical)
 
 # Título de la app
 st.title('Predicción de Resultados de Peleas de UFC')
@@ -140,11 +126,14 @@ stats_fighter_2 = (
 )
 
 # Listas de formatos y clases de peso disponibles
-format_list = (
-    fight_stats["Format"].dropna().unique().tolist()
-    if "Format" in fight_stats.columns
-    else []
-)
+if "Format" in fight_stats.columns:
+    format_list = fight_stats["Format"].dropna().unique().tolist()
+elif "Rounds" in fight_stats.columns:
+    format_list = (
+        fight_stats["Rounds"].dropna().astype(int).astype(str).unique().tolist()
+    )
+else:
+    format_list = []
 inverse_weight_class_mapping = {v: k for k, v in weight_class_mapping.items()}
 weight_class_list = list(weight_class_mapping.keys()) if weight_class_mapping else []
 
@@ -156,33 +145,51 @@ else:
     form_last_5_fighter_2 = stats_fighter_2["form_last_5"].iloc[0]
 
     # Selección de formato y clase de peso
-    default_format = stats_fighter_1["Format"].iloc[0]
-    default_weight_class_code = stats_fighter_1["Weight Class"].iloc[0]
-    default_weight_class = inverse_weight_class_mapping.get(
-        default_weight_class_code,
-        weight_class_list[0] if weight_class_list else None,
+    default_format = (
+        stats_fighter_1["Format"].iloc[0]
+        if "Format" in stats_fighter_1.columns
+        else stats_fighter_1["Rounds"].iloc[0]
+        if "Rounds" in stats_fighter_1.columns
+        else None
+    )
+    default_weight_class_code = (
+        stats_fighter_1["Weight Class"].iloc[0]
+        if "Weight Class" in stats_fighter_1.columns
+        else None
+    )
+    default_weight_class = (
+        inverse_weight_class_mapping.get(default_weight_class_code)
+        if default_weight_class_code is not None
+        else None
     )
     format_index = (
         format_list.index(default_format) if default_format in format_list else 0
     )
-    weight_class_index = (
-        weight_class_list.index(default_weight_class)
-        if default_weight_class in weight_class_list
-        else 0
-    )
-    format_input = st.selectbox(
-        "Selecciona el formato (rondas):",
-        format_list,
-        index=format_index,
-    )
-    weight_class_label = st.selectbox(
-        "Selecciona la clase de peso:",
-        weight_class_list,
-        index=weight_class_index,
-    )
+    if format_list:
+        format_input = st.selectbox(
+            "Selecciona el formato (rondas):",
+            format_list,
+            index=format_index,
+        )
+    else:
+        format_input = default_format
+    if weight_class_list:
+        weight_class_index = (
+            weight_class_list.index(default_weight_class)
+            if default_weight_class in weight_class_list
+            else 0
+        )
+        weight_class_label = st.selectbox(
+            "Selecciona la clase de peso:",
+            weight_class_list,
+            index=weight_class_index,
+        )
+    else:
+        weight_class_label = None
     # Mostrar valores calculados para transparencia
     st.write(f"Formato/Rounds de la pelea: {format_input}")
-    st.write(f"Clase de peso: {weight_class_label}")
+    if weight_class_label is not None:
+        st.write(f"Clase de peso: {weight_class_label}")
     st.write(f"Forma últimos 5 de {fighter_1}: {form_last_5_fighter_1}")
     st.write(f"Forma últimos 5 de {fighter_2}: {form_last_5_fighter_2}")
 
@@ -195,7 +202,7 @@ else:
         st.stop()
     # Convertir entradas del usuario al mismo código utilizado en el entrenamiento
     # Parsear el formato seleccionado y asignarlo a las columnas correspondientes
-    if ("Format" in stats_features_1.columns) or ("Rounds" in stats_features_1.columns):
+    if ("Format" in columnas_X) or ("Rounds" in columnas_X):
         format_input_code = (
             pd.Series([format_input])
             .astype(str)
@@ -203,30 +210,20 @@ else:
             .astype(float)
             .iloc[0]
         )
-        if "Format" in stats_features_1.columns:
+        if "Format" in columnas_X:
             stats_features_1["Format"] = format_input_code
             stats_features_2["Format"] = format_input_code
-        if "Rounds" in stats_features_1.columns:
+        if "Rounds" in columnas_X:
             stats_features_1["Rounds"] = format_input_code
             stats_features_2["Rounds"] = format_input_code
-    if "Weight Class" in stats_features_1.columns:
+    if "Weight Class" in columnas_X and weight_class_label is not None:
         weight_class_input_code = weight_class_mapping[weight_class_label]
         stats_features_1["Weight Class"] = weight_class_input_code
         stats_features_2["Weight Class"] = weight_class_input_code
 
-    # Verificar que las dimensiones coinciden con las esperadas por el modelo
-    if stats_features_1.shape[1] != len(columnas_X) or stats_features_2.shape[1] != len(columnas_X):
-        st.error(
-            "Las columnas de las estadísticas no coinciden con las utilizadas en el modelo."
-        )
-        st.stop()
-
-    # Verificar que las columnas coincidan con las esperadas por el modelo
-    if stats_features_1.columns.tolist() != columnas_X:
-        st.error(
-            "Las columnas de las características no coinciden con las esperadas por el modelo."
-        )
-        st.stop()
+    # Alinear el orden de columnas con el usado durante el entrenamiento
+    stats_features_1 = stats_features_1.reindex(columns=columnas_X)
+    stats_features_2 = stats_features_2.reindex(columns=columnas_X)
 
     # Función para hacer la predicción del ganador
     def hacer_prediccion_winner(stacking_winner, stats_fighter_1, stats_fighter_2, fighter_1, fighter_2):

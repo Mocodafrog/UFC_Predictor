@@ -84,7 +84,10 @@ Algunas librerías se utilizan solo para análisis puntuales y no se instalan po
 
 Los modelos se entrenan mediante scripts ubicados en la raíz del proyecto.
 Los artefactos generados se guardan en `models/{MODEL_VERSION}/`, donde la
-versión se centraliza en `ufc_predictor/config.py`.
+versión se centraliza en `ufc_predictor/config.py`. Además se persiste el
+listado de características empleadas en el entrenamiento como
+`features_{target}.json`; tanto los datos de entrenamiento como los usados para
+predicción deben coincidir con estas columnas y su orden.
 
 Antes de ejecutar estos scripts, asegúrate de que el archivo `data/fight_stats.csv` exista,
 ya que contiene las características utilizadas para el entrenamiento.
