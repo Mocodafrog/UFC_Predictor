@@ -258,20 +258,41 @@ else:
     def hacer_prediccion_method(
         stacking_method, label_encoder_method, stats_fighter_1, stats_fighter_2
     ):
-        # Realizar la predicción para ambos peleadores
-        pred_method_fighter_1 = stacking_method.predict(stats_fighter_1)
-        pred_method_fighter_2 = stacking_method.predict(stats_fighter_2)
+        # Obtener probabilidades de cada método para ambos peleadores
+        proba_fighter_1 = stacking_method.predict_proba(stats_fighter_1)[0]
+        proba_fighter_2 = stacking_method.predict_proba(stats_fighter_2)[0]
 
-        method_fighter_1 = label_encoder_method.inverse_transform(
-            pred_method_fighter_1
-        )[0]
-        method_fighter_2 = label_encoder_method.inverse_transform(
-            pred_method_fighter_2
-        )[0]
+        # Obtener nombres de clases
+        n_clases = len(proba_fighter_1)
+        class_names = label_encoder_method.inverse_transform(range(n_clases))
+
+        # Combinar clases con probabilidades y convertir a porcentajes
+        df_fighter_1 = (
+            pd.DataFrame(
+                {
+                    "Método": class_names,
+                    "Probabilidad (%)": proba_fighter_1 * 100,
+                }
+            )
+            .sort_values("Probabilidad (%)", ascending=False)
+            .reset_index(drop=True)
+        )
+        df_fighter_2 = (
+            pd.DataFrame(
+                {
+                    "Método": class_names,
+                    "Probabilidad (%)": proba_fighter_2 * 100,
+                }
+            )
+            .sort_values("Probabilidad (%)", ascending=False)
+            .reset_index(drop=True)
+        )
 
         st.write("\n--- Resultados de la Predicción del Método de Pelea ---")
-        st.write(f"Método predicho para {fighter_1}: {method_fighter_1}")
-        st.write(f"Método predicho para {fighter_2}: {method_fighter_2}")
+        st.write(f"Probabilidades para {fighter_1}:")
+        st.write(df_fighter_1)
+        st.write(f"Probabilidades para {fighter_2}:")
+        st.write(df_fighter_2)
 
     # Botón para hacer la predicción
     if st.button('Hacer Predicción', disabled=duplicate_selection):
