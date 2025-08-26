@@ -89,6 +89,13 @@ versión se centraliza en `ufc_predictor/config.py`.
 Antes de ejecutar estos scripts, asegúrate de que el archivo `data/fight_stats.csv` exista,
 ya que contiene las características utilizadas para el entrenamiento.
 
+Puedes ajustar el comportamiento mediante variables de entorno:
+
+- `MODEL_NAMES`: lista separada por comas de modelos a entrenar.
+- `FAST_MODE=1`: usa un subconjunto de datos y grids mínimos para ejecuciones rápidas.
+- `EXTENDED_SEARCH=1`: activa grids de hiperparámetros más amplios para una búsqueda exhaustiva.
+  Si ambos flags se usan, `FAST_MODE` tiene prioridad.
+
 Para entrenar el modelo del método de victoria:
 
 ```bash
@@ -107,8 +114,8 @@ Para acelerar la integración continua, los grids de hiperparámetros en
 `ufc_predictor/train.py` usan valores reducidos.  Por ejemplo,
 `n_estimators` se limita a `[50, 100]`, `max_depth` a `[3, 5]` y
 `learning_rate` queda fijo en `0.1`, lo que implica menos de 50 "fits" por
-modelo con validación cruzada de 3 pliegues.  Realiza la búsqueda completa
-fuera del entorno de CI ampliando estas combinaciones.
+modelo con validación cruzada de 3 pliegues.  Fuera del entorno de CI puedes
+activar `EXTENDED_SEARCH=1` para ampliar estas combinaciones.
 
 ## 📊 Agregación vs Dataset Rolling
 
