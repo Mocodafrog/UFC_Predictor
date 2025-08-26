@@ -1,4 +1,5 @@
 
+import json
 import os
 import sys
 
@@ -34,4 +35,4 @@ if __name__ == "__main__":
         model_names=nombres,
         fast_mode=fast,
         extended_search=extended,
-
+    )

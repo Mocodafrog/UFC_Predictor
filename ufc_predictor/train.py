@@ -52,7 +52,8 @@ def train(
     model_names: list[str] | None = None,
     fast_mode: bool = False,
     extended_search: bool = False,
-
+    grid_overrides: dict | None = None,
+) -> None:
     """Entrena modelos base y un stacking final para ``target_column``.
 
     Parameters
