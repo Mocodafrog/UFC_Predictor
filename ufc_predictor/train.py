@@ -16,11 +16,7 @@ import math
 
 import joblib
 import pandas as pd
-from sklearn.ensemble import (
-    GradientBoostingClassifier,
-    RandomForestClassifier,
-    StackingClassifier,
-)
+
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import (
@@ -33,7 +29,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.svm import SVC
 from sklearn.preprocessing import LabelEncoder
 
-from ufc_predictor.config import MODEL_VERSION
+from ufc_predictor.config import MODEL_VERSION, STACKING_FINAL_ESTIMATOR
 
 RANDOM_STATE = 42
 
@@ -66,8 +62,7 @@ def train(
     extended_search: bool = False,
     grid_overrides: dict | None = None,
     cv_splits: int = 5,
-    search_method: str = "grid",
-    final_estimator: LogisticRegression = LogisticRegression(),
+
 ):
     """Entrena modelos base y un stacking final para ``target_column``.
 
@@ -110,8 +105,11 @@ def train(
         :class:`~sklearn.model_selection.RandomizedSearchCV` o ``"bayes"`` para
         una búsqueda bayesiana mediante Optuna o scikit-optimize.
     final_estimator:
-        Estimador final del stacking. Por defecto se utiliza
-        ``LogisticRegression()``.
+        Estimador final del stacking. Por defecto se utiliza el definido en
+        ``ufc_predictor.config.STACKING_FINAL_ESTIMATOR``.
+    passthrough:
+        Si es ``True`` el meta-modelo recibe también las características
+        originales además de las predicciones de los modelos base.
 
     Notes
     -----
@@ -125,6 +123,9 @@ def train(
     if models_dir is None:
         models_dir = os.path.abspath(os.path.join("models", MODEL_VERSION))
     os.makedirs(models_dir, exist_ok=True)
+
+    if final_estimator is None:
+        final_estimator = STACKING_FINAL_ESTIMATOR
 
     try:
         fight_stats = pd.read_csv(os.path.join(data_dir, "fight_stats.csv"))
@@ -471,6 +472,7 @@ def train(
         final_estimator=final_estimator,
         cv=cv,
         n_jobs=-1,
+        passthrough=passthrough,
     )
     stacking.fit(X_train, y_train)
     joblib.dump(stacking, os.path.join(models_dir, f"stacking_{target_suffix}.pkl"))

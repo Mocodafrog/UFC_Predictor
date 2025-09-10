@@ -104,3 +104,48 @@ def test_extended_search_expands_params(tmp_path, monkeypatch):
     assert len(captured["params"]["C"]) > 3
     assert 0.01 in captured["params"]["C"]
     assert 100 in captured["params"]["C"]
+
+
+def test_passthrough_and_final_estimator(tmp_path, monkeypatch):
+    X = pd.DataFrame({"feat": range(12)})
+    y = ["W", "L"] * 6
+
+    fight_stats = X.assign(Winner=y, Method="KO")
+    fight_stats.to_csv(tmp_path / "fight_stats.csv", index=False)
+    pd.Series(["feat"]).to_csv(tmp_path / "columnas_X.csv", index=False, header=False)
+
+    captured: dict = {}
+
+    class CaptureStacking(DummyStackingClassifier):
+        def __init__(self, *args, **kwargs):
+            captured["passthrough"] = kwargs.get("passthrough")
+            captured["final_estimator"] = kwargs.get("final_estimator")
+            super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr(train_module.joblib, "dump", lambda *args, **kwargs: None)
+    monkeypatch.setattr(train_module, "GridSearchCV", DummyGridSearchCV)
+    monkeypatch.setattr(train_module, "StackingClassifier", CaptureStacking)
+
+    monkeypatch.setattr(
+        train_module,
+        "STACKING_FINAL_ESTIMATOR",
+        GradientBoostingClassifier(),
+    )
+
+    models = {"LogReg": (LogisticRegression(random_state=train_module.RANDOM_STATE), {})}
+
+    train("Winner", data_dir=str(tmp_path), models_dir=str(tmp_path), models=models)
+    assert isinstance(captured["final_estimator"], GradientBoostingClassifier)
+    assert captured["passthrough"] is False
+
+    captured.clear()
+    train(
+        "Winner",
+        data_dir=str(tmp_path),
+        models_dir=str(tmp_path),
+        models=models,
+        final_estimator=LogisticRegression(),
+        passthrough=True,
+    )
+    assert isinstance(captured["final_estimator"], LogisticRegression)
+    assert captured["passthrough"] is True
