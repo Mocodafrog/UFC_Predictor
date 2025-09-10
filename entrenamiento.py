@@ -5,6 +5,8 @@ import sys
 
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 from ufc_predictor.train import RANDOM_STATE, train
 
@@ -37,7 +39,15 @@ if __name__ == "__main__":
     if final_name:
         final_name = final_name.lower()
         if final_name == "logistic":
-            final_estimator = LogisticRegression(random_state=RANDOM_STATE)
+            final_estimator = Pipeline(
+                [
+                    ("scaler", StandardScaler()),
+                    (
+                        "logreg",
+                        LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
+                    ),
+                ]
+            )
         elif final_name == "gb":
             final_estimator = GradientBoostingClassifier(random_state=RANDOM_STATE)
 
