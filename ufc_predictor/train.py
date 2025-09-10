@@ -140,6 +140,10 @@ def train(
         & (fight_stats["Method"] != "DQ")  # Excluir peleas terminadas por descalificación
     ]
 
+    # Conservar una copia con todas las columnas originales para analizar
+    # posteriormente los casos mal clasificados.
+    fight_stats_original = fight_stats.copy()
+
     try:
         columnas_X = pd.read_csv(
             os.path.join(data_dir, "columnas_X.csv"), header=None
@@ -473,6 +477,13 @@ def train(
 
     y_pred = stacking.predict(X_test)
     y_proba = stacking.predict_proba(X_test)
+
+    # Guardar filas donde el modelo se equivocó para su análisis posterior
+    mis_idx = y_test.index[y_pred != y_test]
+    mispredictions = fight_stats_original.loc[mis_idx]
+    mispredictions.to_csv(
+        os.path.join(data_dir, f"mispredictions_{target_suffix}.csv"), index=False
+    )
 
     accuracy = accuracy_score(y_test, y_pred)
     if len(set(y_test)) == 2:
