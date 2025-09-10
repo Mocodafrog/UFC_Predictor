@@ -251,6 +251,8 @@ def train(
         from lightgbm import LGBMClassifier
         from xgboost import XGBClassifier
         from catboost import CatBoostClassifier
+        from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import StandardScaler
 
         if extended_search:
             models = {
@@ -294,8 +296,18 @@ def train(
                     },
                 ),
                 "LogisticRegression": (
-                    LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
-                    {"C": [0.01, 0.1, 1.0, 10]},
+                    Pipeline(
+                        [
+                            ("scaler", StandardScaler()),
+                            (
+                                "logreg",
+                                LogisticRegression(
+                                    max_iter=1000, random_state=RANDOM_STATE
+                                ),
+                            ),
+                        ]
+                    ),
+                    {"logreg__C": [0.01, 0.1, 1.0, 10]},
                 ),
                 "SVC": (
                     SVC(probability=True, random_state=RANDOM_STATE),
@@ -347,8 +359,18 @@ def train(
                     },
                 ),
                 "LogisticRegression": (
-                    LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
-                    {"C": [0.1, 1.0]},
+                    Pipeline(
+                        [
+                            ("scaler", StandardScaler()),
+                            (
+                                "logreg",
+                                LogisticRegression(
+                                    max_iter=1000, random_state=RANDOM_STATE
+                                ),
+                            ),
+                        ]
+                    ),
+                    {"logreg__C": [0.1, 1.0]},
                 ),
                 "SVC": (
                     SVC(probability=True, random_state=RANDOM_STATE),

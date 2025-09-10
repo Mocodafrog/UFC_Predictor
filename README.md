@@ -94,7 +94,6 @@ ya que contiene las características utilizadas para el entrenamiento.
 
 Puedes ajustar el comportamiento mediante variables de entorno:
 
-- `MODEL_NAMES`: lista separada por comas de modelos a entrenar.
 - `EXTENDED_SEARCH=1`: activa grids de hiperparámetros más amplios para una búsqueda exhaustiva.
 
 El stacking por defecto entrena siete modelos base (XGBoost, LightGBM,
