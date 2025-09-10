@@ -12,14 +12,19 @@ __all__ = ["train"]
 
 import os
 import json
+import math
 
 import joblib
 import pandas as pd
-from sklearn.base import ClassifierMixin
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, StackingClassifier
+
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
+from sklearn.model_selection import (
+    GridSearchCV,
+    RandomizedSearchCV,
+    StratifiedKFold,
+    train_test_split,
+)
 from sklearn.impute import SimpleImputer
 from sklearn.svm import SVC
 from sklearn.preprocessing import LabelEncoder
@@ -57,8 +62,7 @@ def train(
     extended_search: bool = False,
     grid_overrides: dict | None = None,
     cv_splits: int = 5,
-    final_estimator: ClassifierMixin | None = None,
-    passthrough: bool = False,
+
 ):
     """Entrena modelos base y un stacking final para ``target_column``.
 
@@ -95,6 +99,11 @@ def train(
     cv_splits:
         Número de particiones para la validación cruzada (se reduce a 2 si
         ``fast_mode`` es ``True``).
+    search_method:
+        Estrategia de búsqueda de hiperparámetros. Puede ser ``"grid"`` para
+        :class:`~sklearn.model_selection.GridSearchCV`, ``"random"`` para
+        :class:`~sklearn.model_selection.RandomizedSearchCV` o ``"bayes"`` para
+        una búsqueda bayesiana mediante Optuna o scikit-optimize.
     final_estimator:
         Estimador final del stacking. Por defecto se utiliza el definido en
         ``ufc_predictor.config.STACKING_FINAL_ESTIMATOR``.
@@ -131,6 +140,10 @@ def train(
         (fight_stats["Winner"].isin(["W", "L"]))  # Mantener solo victorias o derrotas
         & (fight_stats["Method"] != "DQ")  # Excluir peleas terminadas por descalificación
     ]
+
+    # Conservar una copia con todas las columnas originales para analizar
+    # posteriormente los casos mal clasificados.
+    fight_stats_original = fight_stats.copy()
 
     try:
         columnas_X = pd.read_csv(
@@ -384,19 +397,75 @@ def train(
     # Se requieren al menos ``n_splits`` muestras por clase o debes aumentar los datos.
     cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=RANDOM_STATE)
     mejores = []
+    resultados: dict[str, dict] = {}
     print(f"\n📊 Iniciando entrenamiento para {target_column.upper()}\n")
     for nombre, (modelo, params) in models.items():
-        print(f"⚙️ GridSearch para {nombre}...")
-        grid = GridSearchCV(
-            modelo, params, cv=cv, scoring="accuracy", verbose=1, n_jobs=-1
-        )
-        grid.fit(X_train, y_train)
+        print(f"⚙️ {search_method.capitalize()}Search para {nombre}...")
+        if search_method == "grid":
+            search = GridSearchCV(
+                modelo, params, cv=cv, scoring="accuracy", verbose=1, n_jobs=-1
+            )
+        elif search_method == "random":
+            total = math.prod(len(v) for v in params.values())
+            n_iter = min(10, total)
+            search = RandomizedSearchCV(
+                modelo,
+                params,
+                n_iter=n_iter,
+                cv=cv,
+                scoring="accuracy",
+                verbose=1,
+                n_jobs=-1,
+                random_state=RANDOM_STATE,
+            )
+        elif search_method == "bayes":
+            try:
+                from optuna.integration import OptunaSearchCV
+
+                search = OptunaSearchCV(
+                    modelo,
+                    params,
+                    cv=cv,
+                    scoring="accuracy",
+                    n_trials=10,
+                    random_state=RANDOM_STATE,
+                    n_jobs=-1,
+                )
+            except Exception:
+                try:
+                    from skopt import BayesSearchCV
+                    from skopt.space import Categorical
+
+                    space = {k: Categorical(v) for k, v in params.items()}
+                    search = BayesSearchCV(
+                        modelo,
+                        space,
+                        n_iter=10,
+                        cv=cv,
+                        scoring="accuracy",
+                        random_state=RANDOM_STATE,
+                        n_jobs=-1,
+                    )
+                except Exception as exc:  # pragma: no cover - env dep
+                    raise ImportError(
+                        "Optuna o scikit-optimize son necesarios para search_method='bayes'"
+                    ) from exc
+        else:
+            raise ValueError("search_method debe ser 'grid', 'random' o 'bayes'")
+
+        search.fit(X_train, y_train)
         joblib.dump(
-            grid.best_estimator_,
+            search.best_estimator_,
             os.path.join(models_dir, f"{nombre.lower()}_{target_suffix}.pkl"),
         )
-        mejores.append((nombre, grid.best_estimator_))
-        print(f"✅ {nombre} mejores parámetros: {grid.best_params_}")
+        mejores.append((nombre, search.best_estimator_))
+        resultados[nombre] = {
+            "best_params": search.best_params_,
+            "best_score": getattr(search, "best_score_", None),
+        }
+        print(
+            f"✅ {nombre} mejores parámetros ({search_method}): {search.best_params_}"
+        )
 
     stacking = StackingClassifier(
         estimators=mejores,
@@ -411,6 +480,13 @@ def train(
     y_pred = stacking.predict(X_test)
     y_proba = stacking.predict_proba(X_test)
 
+    # Guardar filas donde el modelo se equivocó para su análisis posterior
+    mis_idx = y_test.index[y_pred != y_test]
+    mispredictions = fight_stats_original.loc[mis_idx]
+    mispredictions.to_csv(
+        os.path.join(data_dir, f"mispredictions_{target_suffix}.csv"), index=False
+    )
+
     accuracy = accuracy_score(y_test, y_pred)
     if len(set(y_test)) == 2:
         roc_auc = roc_auc_score(y_test, y_proba[:, 1])
@@ -421,8 +497,13 @@ def train(
     print(f"Accuracy: {accuracy:.4f}")
     print(f"ROC-AUC: {roc_auc:.4f}")
     print(f"Random state: {RANDOM_STATE}\n")
-
-    with open(os.path.join(models_dir, f"metrics_{target_suffix}.txt"), "w") as f:
+    metrics_path = os.path.join(models_dir, f"metrics_{target_suffix}.txt")
+    with open(metrics_path, "w") as f:
+        f.write(f"Search method: {search_method}\n")
+        for nombre, info in resultados.items():
+            f.write(f"{nombre} best params: {info['best_params']}\n")
+            if info["best_score"] is not None:
+                f.write(f"{nombre} best score: {info['best_score']:.4f}\n")
         f.write(f"Accuracy: {accuracy:.4f}\n")
         f.write(f"ROC-AUC: {roc_auc:.4f}\n")
         f.write(f"Random state: {RANDOM_STATE}\n")

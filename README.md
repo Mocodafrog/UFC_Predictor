@@ -128,6 +128,11 @@ Para entrenar el modelo del ganador del combate:
 python entrenamiento_winner.py
 ```
 
+Tras cada entrenamiento se genera `data/mispredictions_{target}.csv` con las filas
+del dataset original que el modelo predijo de forma incorrecta. Revisa este
+archivo para detectar registros erróneos o columnas mal procesadas; corrige esos
+datos en `fight_stats.csv` o ajusta tu preprocesamiento antes de reentrenar.
+
 ### Ajustes rápidos en CI
 
 Para acelerar la integración continua, los grids de hiperparámetros en
