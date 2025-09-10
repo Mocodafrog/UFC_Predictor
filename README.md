@@ -95,9 +95,11 @@ ya que contiene las características utilizadas para el entrenamiento.
 Puedes ajustar el comportamiento mediante variables de entorno:
 
 - `MODEL_NAMES`: lista separada por comas de modelos a entrenar.
-- `FAST_MODE=1`: usa un subconjunto de datos y grids mínimos para ejecuciones rápidas.
 - `EXTENDED_SEARCH=1`: activa grids de hiperparámetros más amplios para una búsqueda exhaustiva.
-  Si ambos flags se usan, `FAST_MODE` tiene prioridad.
+
+El stacking por defecto entrena cinco modelos base (XGBoost, LightGBM, CatBoost,
+RandomForest y GradientBoosting) cuyos resultados se combinan mediante una
+regresión logística.
 
 ### Configurar el meta-modelo
 
