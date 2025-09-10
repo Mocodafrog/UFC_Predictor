@@ -99,7 +99,22 @@ Puedes ajustar el comportamiento mediante variables de entorno:
 - `EXTENDED_SEARCH=1`: activa grids de hiperparámetros más amplios para una búsqueda exhaustiva.
   Si ambos flags se usan, `FAST_MODE` tiene prioridad.
 
+### Configurar el meta-modelo
 
+El stacking final utiliza por defecto una regresión logística definida en
+`ufc_predictor/config.py` como `STACKING_FINAL_ESTIMATOR`. Puedes cambiar este
+valor en la configuración o pasar cualquier estimador compatible mediante el
+argumento `final_estimator` de `train`. Además, el parámetro `passthrough`
+permite concatenar las características originales con las predicciones de los
+modelos base al entrenar el meta-modelo.
+
+```python
+from sklearn.ensemble import GradientBoostingClassifier
+from ufc_predictor.train import train
+
+# Usa GradientBoosting como meta-modelo y activa passthrough
+train("Winner", final_estimator=GradientBoostingClassifier(), passthrough=True)
+```
 
 Para entrenar el modelo del método de victoria:
 
