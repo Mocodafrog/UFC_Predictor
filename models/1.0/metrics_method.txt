@@ -3,6 +3,16 @@ XGBoost best params: {'learning_rate': 0.1, 'max_depth': 5, 'n_estimators': 100}
 XGBoost best score: 0.7175
 LightGBM best params: {'learning_rate': 0.1, 'max_depth': 5, 'n_estimators': 50}
 LightGBM best score: 0.7197
-Accuracy: 0.7270
-ROC-AUC: 0.8536
+CatBoost best params: {'iterations': 100, 'learning_rate': 0.1}
+CatBoost best score: 0.7147
+RandomForest best params: {'max_depth': 20, 'min_samples_split': 5, 'n_estimators': 100}
+RandomForest best score: 0.7092
+GradientBoosting best params: {'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 100}
+GradientBoosting best score: 0.7190
+LogisticRegression best params: {'logreg__C': 1.0}
+LogisticRegression best score: 0.7052
+SVC best params: {'C': 1.0, 'kernel': 'rbf'}
+SVC best score: 0.6857
+Accuracy: 0.7289
+ROC-AUC: 0.8556
 Random state: 42
