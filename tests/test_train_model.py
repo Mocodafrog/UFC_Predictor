@@ -97,13 +97,12 @@ def test_extended_search_expands_params(tmp_path, monkeypatch):
         "Winner",
         data_dir=str(tmp_path),
         models_dir=str(tmp_path),
-        model_names=["LogisticRegression"],
+        model_names=["RandomForest"],
         extended_search=True,
     )
 
-    assert len(captured["params"]["C"]) > 3
-    assert 0.01 in captured["params"]["C"]
-    assert 100 in captured["params"]["C"]
+    assert len(captured["params"]["n_estimators"]) > 2
+    assert 300 in captured["params"]["n_estimators"]
 
 
 def test_passthrough_and_final_estimator(tmp_path, monkeypatch):
