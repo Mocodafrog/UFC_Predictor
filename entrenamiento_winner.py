@@ -29,10 +29,25 @@ if __name__ == "__main__":
     nombres = [m.strip() for m in model_names.split(",") if m.strip()] if model_names else None
     fast = os.getenv("FAST_MODE", "").lower() in ("1", "true", "yes")
     extended = os.getenv("EXTENDED_SEARCH", "").lower() in ("1", "true", "yes")
+    # Parámetros adicionales para controlar el stacking y la búsqueda
+    search_method = os.getenv("SEARCH_METHOD", "grid")
+    passthrough = os.getenv("STACK_PASSTHROUGH", "").lower() in ("1", "true", "yes")
+
+    final_name = os.getenv("FINAL_ESTIMATOR")
+    final_estimator = None
+    if final_name:
+        final_name = final_name.lower()
+        if final_name == "logistic":
+            final_estimator = LogisticRegression(random_state=RANDOM_STATE)
+        elif final_name == "gb":
+            final_estimator = GradientBoostingClassifier(random_state=RANDOM_STATE)
 
     train(
         "Winner",
         model_names=nombres,
         fast_mode=fast,
         extended_search=extended,
+        search_method=search_method,
+        final_estimator=final_estimator,
+        passthrough=passthrough,
     )

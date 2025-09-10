@@ -128,6 +128,19 @@ Para entrenar el modelo del ganador del combate:
 python entrenamiento_winner.py
 ```
 
+Ambos scripts aceptan parámetros opcionales mediante variables de entorno:
+
+* `SEARCH_METHOD`: estrategia de búsqueda (`grid`, `random` o `bayes`).
+* `FINAL_ESTIMATOR`: meta-modelo del stacking (`logistic` o `gb`).
+* `STACK_PASSTHROUGH`: si vale `1`/`true` el meta-modelo recibe también las
+  características originales.
+
+Ejemplo:
+
+```bash
+SEARCH_METHOD=random STACK_PASSTHROUGH=1 FINAL_ESTIMATOR=gb python entrenamiento.py
+```
+
 Tras cada entrenamiento se genera `data/mispredictions_{target}.csv` con las filas
 del dataset original que el modelo predijo de forma incorrecta. Revisa este
 archivo para detectar registros erróneos o columnas mal procesadas; corrige esos
