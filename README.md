@@ -10,7 +10,7 @@ El flujo de trabajo incluye desde el web scraping de datos de peleadores y comba
 - Pandas
 - NumPy
 - Scikit-learn
-- XGBoost, LightGBM, CatBoost
+- XGBoost, LightGBM, CatBoost, RandomForest, GradientBoosting, LogisticRegression, SVC
 - MySQL (AWS RDS)
 - Streamlit
 - BeautifulSoup4 (Web Scraping)
@@ -97,9 +97,9 @@ Puedes ajustar el comportamiento mediante variables de entorno:
 - `MODEL_NAMES`: lista separada por comas de modelos a entrenar.
 - `EXTENDED_SEARCH=1`: activa grids de hiperparámetros más amplios para una búsqueda exhaustiva.
 
-El stacking por defecto entrena cinco modelos base (XGBoost, LightGBM, CatBoost,
-RandomForest y GradientBoosting) cuyos resultados se combinan mediante una
-regresión logística.
+El stacking por defecto entrena siete modelos base (XGBoost, LightGBM,
+CatBoost, RandomForest, GradientBoosting, LogisticRegression y SVC) cuyos
+resultados se combinan mediante una regresión logística.
 
 ### Configurar el meta-modelo
 

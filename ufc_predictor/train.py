@@ -31,6 +31,8 @@ from sklearn.ensemble import (
     RandomForestClassifier,
     StackingClassifier,
 )
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 
 from ufc_predictor.config import MODEL_VERSION, STACKING_FINAL_ESTIMATOR
 
@@ -291,6 +293,18 @@ def train(
                         "max_depth": [3, 5, 7],
                     },
                 ),
+                "LogisticRegression": (
+                    LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
+                    {"C": [0.01, 0.1, 1.0, 10]},
+                ),
+                "SVC": (
+                    SVC(probability=True, random_state=RANDOM_STATE),
+                    {
+                        "C": [0.1, 1.0, 10],
+                        "kernel": ["linear", "rbf"],
+                        "gamma": ["scale", "auto"],
+                    },
+                ),
             }
         else:
             # Hyperparameter grids are intentionally small to keep CI runtime low.
@@ -331,6 +345,14 @@ def train(
                         "n_estimators": [50, 100],
                         "max_depth": [3, 5],
                     },
+                ),
+                "LogisticRegression": (
+                    LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
+                    {"C": [0.1, 1.0]},
+                ),
+                "SVC": (
+                    SVC(probability=True, random_state=RANDOM_STATE),
+                    {"C": [0.5, 1.0], "kernel": ["rbf"]},
                 ),
             }
 
