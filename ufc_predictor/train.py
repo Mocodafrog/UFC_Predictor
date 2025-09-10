@@ -28,6 +28,11 @@ from sklearn.model_selection import (
 from sklearn.impute import SimpleImputer
 from sklearn.svm import SVC
 from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import (
+    GradientBoostingClassifier,
+    RandomForestClassifier,
+    StackingClassifier,
+)
 
 from ufc_predictor.config import MODEL_VERSION, STACKING_FINAL_ESTIMATOR
 
@@ -61,6 +66,9 @@ def train(
     fast_mode: bool = False,
     extended_search: bool = False,
     grid_overrides: dict | None = None,
+    search_method: str = "grid",
+    final_estimator=None,
+    passthrough: bool = False,
     cv_splits: int = 5,
 
 ):
@@ -96,9 +104,6 @@ def train(
         deben coincidir con las del diccionario ``models`` y sus valores se
         combinan con los grids por defecto, sustituyendo o ampliando los
         existentes.
-    cv_splits:
-        Número de particiones para la validación cruzada (se reduce a 2 si
-        ``fast_mode`` es ``True``).
     search_method:
         Estrategia de búsqueda de hiperparámetros. Puede ser ``"grid"`` para
         :class:`~sklearn.model_selection.GridSearchCV`, ``"random"`` para
@@ -110,6 +115,9 @@ def train(
     passthrough:
         Si es ``True`` el meta-modelo recibe también las características
         originales además de las predicciones de los modelos base.
+    cv_splits:
+        Número de particiones para la validación cruzada (se reduce a 2 si
+        ``fast_mode`` es ``True``).
 
     Notes
     -----
@@ -125,6 +133,7 @@ def train(
     os.makedirs(models_dir, exist_ok=True)
 
     if final_estimator is None:
+        # Mantener el estimador por defecto si no se especifica otro
         final_estimator = STACKING_FINAL_ESTIMATOR
 
     try:
