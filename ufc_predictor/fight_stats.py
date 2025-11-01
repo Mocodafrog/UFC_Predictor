@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-DATA_DIR = Path("data")
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
 # Regex-based mapping to collapse a variety of historical and tournament
@@ -192,7 +192,7 @@ def compute_last_five_stats(
 
     # Persist the full dataset and a reduced version with only rolling means
     export_dir = Path(output_dir) if output_dir is not None else DATA_DIR
-    export_dir.mkdir(exist_ok=True)
+
     df.to_csv(export_dir / "fight_stats.csv", index=False)
 
     reduced_cols = [
