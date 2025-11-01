@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-DATA_DIR = Path("data")
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
 # Regex-based mapping to collapse a variety of historical and tournament
@@ -54,14 +54,19 @@ def _time_to_seconds(text: str) -> int:
     return 0
 
 
-def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.csv") -> pd.DataFrame:
+def compute_last_five_stats(
+    csv_path: str | Path = DATA_DIR / "fight_stats_raw.csv",
+    *,
+    output_dir: str | Path | None = None,
+) -> pd.DataFrame:
     """Generate a rolling dataset for the last five fights of each fighter.
 
     This routine keeps one row per bout and appends rolling averages for
     numerous statistics as well as a ``form_last_5`` column with the number of
     recent wins. After the metrics are created the resulting DataFrame is
-    written to ``data/fight_stats.csv`` and a reduced dataset containing the
-    rolling means is exported to ``data/df_estadisticas_ultimos_5.csv``.
+    written to ``fight_stats.csv`` inside ``output_dir`` (or ``data/`` by
+    default) and a reduced dataset containing the rolling means is exported to
+    ``df_estadisticas_ultimos_5.csv`` in the same directory.
     For a per-fighter aggregated summary, see
     :func:`ufc_predictor.analysis.aggregate_last_five_stats`.
 
@@ -186,8 +191,9 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
         )
 
     # Persist the full dataset and a reduced version with only rolling means
-    DATA_DIR.mkdir(exist_ok=True)
-    df.to_csv(DATA_DIR / "fight_stats.csv", index=False)
+    export_dir = Path(output_dir) if output_dir is not None else DATA_DIR
+    export_dir.mkdir(parents=True, exist_ok=True)
+    df.to_csv(export_dir / "fight_stats.csv", index=False)
 
     reduced_cols = [
         "Fighter",
@@ -197,7 +203,7 @@ def compute_last_five_stats(csv_path: str | Path = DATA_DIR / "fight_stats_raw.c
         "form_last_5",
     ] + [c for c in df.columns if c.endswith("_rolling_mean")]
     reduced = df[reduced_cols]
-    reduced.to_csv(DATA_DIR / "df_estadisticas_ultimos_5.csv", index=False)
+    reduced.to_csv(export_dir / "df_estadisticas_ultimos_5.csv", index=False)
 
     return df
 

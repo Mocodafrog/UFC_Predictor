@@ -1,10 +1,24 @@
 """Web scraping utilities for UFC statistics."""
 import time
+from pathlib import Path
 from typing import Optional
 
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
+
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
+
+def _resolve_output_csv(path: str | Path | None) -> Path:
+    """Return the absolute path for the raw fight stats export."""
+
+    if path is None:
+        return DATA_DIR / "fight_stats_raw.csv"
+
+    candidate = Path(path).expanduser()
+    return candidate if candidate.is_absolute() else Path.cwd() / candidate
 
 
 def fetch(
@@ -137,7 +151,7 @@ def scrape_fight_stats(
     timeout: int = 10,
     delay: float = 1.0,
     max_events: Optional[int] = None,
-    output_csv: str = "data/fight_stats_raw.csv",
+    output_csv: str | Path | None = None,
 ) -> pd.DataFrame:
     """Scrape individual fight statistics from completed UFC events.
 
@@ -150,7 +164,8 @@ def scrape_fight_stats(
     max_events:
         Optional maximum number of events to scrape. Useful for testing.
     output_csv:
-        Path where the resulting CSV will be written.
+        Path where the resulting CSV will be written. If ``None`` (the
+        default), the file is stored in the project ``data`` directory.
 
     Returns
     -------
@@ -158,6 +173,7 @@ def scrape_fight_stats(
         DataFrame containing per-fighter statistics for each fight.
     """
 
+    output_path = _resolve_output_csv(output_csv)
     results: list[dict[str, str]] = []
 
     with requests.Session() as session:
@@ -283,5 +299,6 @@ def scrape_fight_stats(
 
     df = pd.DataFrame(results)
     if not df.empty:
-        df.to_csv(output_csv, index=False)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(output_path, index=False)
     return df
