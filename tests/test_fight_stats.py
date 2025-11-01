@@ -3,7 +3,7 @@ import runpy
 import pytest
 
 import ufc_predictor.fight_stats as fight_stats_module
-from ufc_predictor.fight_stats import compute_last_five_stats
+from ufc_predictor.fight_stats import compute_last_five_stats, _resolve_export_dir
 
 
 def test_compute_last_five_stats_missing_csv(tmp_path, capsys):
@@ -110,6 +110,7 @@ def test_uses_custom_output_directory(tmp_path, monkeypatch):
     assert not df.empty
     assert (output_dir / "fight_stats.csv").is_file()
     assert (output_dir / "df_estadisticas_ultimos_5.csv").is_file()
+
 
 
 def test_weight_class_regex_mapping(tmp_path, monkeypatch):
