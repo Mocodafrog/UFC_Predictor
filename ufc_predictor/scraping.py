@@ -1,5 +1,6 @@
 """Web scraping utilities for UFC statistics."""
 import time
+from pathlib import Path
 from typing import Optional
 
 import requests
@@ -283,5 +284,7 @@ def scrape_fight_stats(
 
     df = pd.DataFrame(results)
     if not df.empty:
-        df.to_csv(output_csv, index=False)
+        output_path = Path(output_csv)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(output_path, index=False)
     return df
