@@ -192,7 +192,7 @@ def compute_last_five_stats(
 
     # Persist the full dataset and a reduced version with only rolling means
     export_dir = Path(output_dir) if output_dir is not None else DATA_DIR
-    export_dir.mkdir(exist_ok=True)
+    export_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(export_dir / "fight_stats.csv", index=False)
 
     reduced_cols = [

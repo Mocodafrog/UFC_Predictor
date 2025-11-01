@@ -102,7 +102,7 @@ def test_uses_custom_output_directory(tmp_path, monkeypatch):
     csv = tmp_path / "raw.csv"
     data.to_csv(csv, index=False)
 
-    output_dir = tmp_path / "exports"
+    output_dir = tmp_path / "exports" / "nested"
     monkeypatch.setattr(fight_stats_module, "DATA_DIR", tmp_path / "unused")
 
     df = compute_last_five_stats(csv, output_dir=output_dir)

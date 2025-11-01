@@ -1,5 +1,6 @@
 """Web scraping utilities for UFC statistics."""
 import time
+from pathlib import Path
 from typing import Optional
 
 import requests
@@ -171,16 +172,21 @@ def scrape_fight_stats(
             }
         )
 
-        events_url = "http://ufcstats.com/statistics/events/completed"
+        events_url = "http://ufcstats.com/statistics/events/completed?page=all"
         events_soup = fetch_soup(session, events_url, timeout=timeout)
         if not events_soup:
-            return pd.DataFrame()
+            raise RuntimeError("Failed to load completed events listing from UFC Stats.")
 
-        event_links = [
+        raw_event_links = [
             a["href"]
-            for a in events_soup.select("tr.b-statistics__table-row a")
-            if a.get("href")
+            for a in events_soup.select("tr.b-statistics__table-row a[href*='event-details']")
         ]
+        # ``dict.fromkeys`` preserves the original order while removing duplicates, which
+        # occur because the events table exposes both "Event Details" and "Results"
+        # anchors for the same URL.
+        event_links = list(dict.fromkeys(raw_event_links))
+        if not event_links:
+            raise RuntimeError("No completed event links were discovered on UFC Stats.")
 
         for idx, event_url in enumerate(event_links):
             if max_events is not None and idx >= max_events:
@@ -282,6 +288,10 @@ def scrape_fight_stats(
                     )
 
     df = pd.DataFrame(results)
-    if not df.empty:
-        df.to_csv(output_csv, index=False)
+    if df.empty:
+        raise RuntimeError("Scraped fight stats returned no rows; UFC Stats markup may have changed.")
+
+    output_path = Path(output_csv)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(output_path, index=False)
     return df
