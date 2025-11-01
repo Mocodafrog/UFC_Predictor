@@ -3,7 +3,7 @@ import runpy
 import pytest
 
 import ufc_predictor.fight_stats as fight_stats_module
-from ufc_predictor.fight_stats import compute_last_five_stats
+from ufc_predictor.fight_stats import compute_last_five_stats, _resolve_export_dir
 
 
 def test_compute_last_five_stats_missing_csv(tmp_path, capsys):
@@ -73,6 +73,49 @@ def test_filters_and_normalizes(tmp_path, monkeypatch):
     assert set(df["Weight Class"]) == {"Bantamweight", "Lightweight"}
     assert set(df["Method"]) == {"Decision", "KO/TKO"}
     assert not set(df["Winner"]) & {"NC", "D"}
+
+
+def test_uses_custom_output_directory(tmp_path, monkeypatch):
+    data = pd.DataFrame(
+        {
+            "Fighter": ["F1"],
+            "Winner": ["W"],
+            "Method": ["Decision - Unanimous"],
+            "Weight Class": ["Bantamweight"],
+            "KD": [0],
+            "Sig. Str.": ["1 of 1"],
+            "Total Str.": ["1 of 1"],
+            "TD": ["0 of 0"],
+            "Sub. Att": [0],
+            "Reversal": [0],
+            "Control Time": ["0:10"],
+            "Head": ["1 of 1"],
+            "Body": ["0 of 0"],
+            "Leg": ["0 of 0"],
+            "Distance": ["1 of 1"],
+            "Clinch": ["0 of 0"],
+            "Ground": ["0 of 0"],
+            "Fight_lenght": ["0:10"],
+            "Format": ["3 Rnd"],
+        }
+    )
+    csv = tmp_path / "raw.csv"
+    data.to_csv(csv, index=False)
+
+    output_dir = tmp_path / "exports"
+    monkeypatch.setattr(fight_stats_module, "DATA_DIR", tmp_path / "unused")
+
+    df = compute_last_five_stats(csv, output_dir=output_dir)
+
+    assert not df.empty
+    assert (output_dir / "fight_stats.csv").is_file()
+    assert (output_dir / "df_estadisticas_ultimos_5.csv").is_file()
+
+
+def test_resolve_export_dir_relative(monkeypatch, tmp_path):
+    monkeypatch.setattr(fight_stats_module, "DATA_DIR", tmp_path)
+    resolved = _resolve_export_dir("exports")
+    assert resolved == tmp_path / "exports"
 
 
 def test_weight_class_regex_mapping(tmp_path, monkeypatch):
