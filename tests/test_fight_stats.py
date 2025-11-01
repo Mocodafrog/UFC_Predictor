@@ -75,6 +75,43 @@ def test_filters_and_normalizes(tmp_path, monkeypatch):
     assert not set(df["Winner"]) & {"NC", "D"}
 
 
+def test_uses_custom_output_directory(tmp_path, monkeypatch):
+    data = pd.DataFrame(
+        {
+            "Fighter": ["F1"],
+            "Winner": ["W"],
+            "Method": ["Decision - Unanimous"],
+            "Weight Class": ["Bantamweight"],
+            "KD": [0],
+            "Sig. Str.": ["1 of 1"],
+            "Total Str.": ["1 of 1"],
+            "TD": ["0 of 0"],
+            "Sub. Att": [0],
+            "Reversal": [0],
+            "Control Time": ["0:10"],
+            "Head": ["1 of 1"],
+            "Body": ["0 of 0"],
+            "Leg": ["0 of 0"],
+            "Distance": ["1 of 1"],
+            "Clinch": ["0 of 0"],
+            "Ground": ["0 of 0"],
+            "Fight_lenght": ["0:10"],
+            "Format": ["3 Rnd"],
+        }
+    )
+    csv = tmp_path / "raw.csv"
+    data.to_csv(csv, index=False)
+
+    output_dir = tmp_path / "exports"
+    monkeypatch.setattr(fight_stats_module, "DATA_DIR", tmp_path / "unused")
+
+    df = compute_last_five_stats(csv, output_dir=output_dir)
+
+    assert not df.empty
+    assert (output_dir / "fight_stats.csv").is_file()
+    assert (output_dir / "df_estadisticas_ultimos_5.csv").is_file()
+
+
 def test_weight_class_regex_mapping(tmp_path, monkeypatch):
     data = pd.DataFrame(
         {
