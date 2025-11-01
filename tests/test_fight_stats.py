@@ -112,11 +112,6 @@ def test_uses_custom_output_directory(tmp_path, monkeypatch):
     assert (output_dir / "df_estadisticas_ultimos_5.csv").is_file()
 
 
-def test_resolve_export_dir_relative(monkeypatch, tmp_path):
-    monkeypatch.setattr(fight_stats_module, "DATA_DIR", tmp_path)
-    resolved = _resolve_export_dir("exports")
-    assert resolved == tmp_path / "exports"
-
 
 def test_weight_class_regex_mapping(tmp_path, monkeypatch):
     data = pd.DataFrame(

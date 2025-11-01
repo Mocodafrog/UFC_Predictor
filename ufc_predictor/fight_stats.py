@@ -55,15 +55,6 @@ def _time_to_seconds(text: str) -> int:
     return 0
 
 
-def _resolve_export_dir(path: str | Path | None) -> Path:
-    """Return the directory where processed fight stats will be stored."""
-
-    if path is None:
-        return DATA_DIR
-
-    candidate = Path(path).expanduser()
-    return candidate if candidate.is_absolute() else DATA_DIR / candidate
-
 
 def compute_last_five_stats(
     csv_path: str | Path = DATA_DIR / "fight_stats_raw.csv",
@@ -202,8 +193,7 @@ def compute_last_five_stats(
         )
 
     # Persist the full dataset and a reduced version with only rolling means
-    export_dir = _resolve_export_dir(output_dir)
-    export_dir.mkdir(parents=True, exist_ok=True)
+
     df.to_csv(export_dir / "fight_stats.csv", index=False)
 
     reduced_cols = [
